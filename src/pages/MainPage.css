@@ -1,0 +1,145 @@
+.app-container {
+  width: 402px;
+  height: 874px;
+  margin: 40px auto;
+  border-radius: 40px;
+  overflow: hidden;
+  background: white;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+}
+
+.main-page {
+  width: 100%;
+  height: 100%;
+  padding: 20px 16px;
+  box-sizing: border-box;
+  background: #f8f8f8;
+}
+
+.main-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo {
+  margin: 0;
+  font-size: 32px;
+  font-weight: 800;
+  color: #2563eb;
+}
+
+.profile-btn {
+  border: none;
+  background: white;
+  border-radius: 9999px;
+  width: 40px;
+  height: 40px;
+  font-size: 20px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+}
+
+.add-trip-btn {
+  display: block;
+  margin: 20px auto 16px;
+  border: none;
+  border-radius: 12px;
+  padding: 10px 16px;
+  background: #dbeafe;
+  color: #2563eb;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.globe-card {
+  width: 100%;
+  height: 360px;
+  border-radius: 24px;
+  overflow: hidden;
+  background: black;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.globe-viewer {
+  width: 100%;
+  height: 100%;
+}
+
+.trip-list-section {
+  margin-top: 20px;
+  background: white;
+  border-radius: 24px;
+  padding: 20px 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+.trip-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.trip-list-header h2 {
+  margin: 0;
+  font-size: 28px;
+}
+
+.sort-btn {
+  border: none;
+  background: transparent;
+  font-size: 24px;
+  cursor: pointer;
+}
+
+.trip-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.trip-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  border: none;
+  border-radius: 18px;
+  padding: 14px;
+  background: #f3f4f6;
+  text-align: left;
+  cursor: pointer;
+}
+
+/* .trip-flag {
+  font-size: 38px;
+  line-height: 1;
+} */
+
+.trip-flag {
+  font-size: 38px;
+  line-height: 1;
+  font-family:
+    "Apple Color Emoji",
+    "Segoe UI Emoji",
+    "Noto Color Emoji",
+    sans-serif;
+}
+
+.trip-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.trip-title {
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.trip-date {
+  font-size: 16px;
+  color: #6b7280;
+}
