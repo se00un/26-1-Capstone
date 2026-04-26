@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import "./AddSchedulePage.css";
+declare const google: any;
 
 export default function AddSchedulePage() {
   const navigate = useNavigate();
@@ -8,51 +9,62 @@ export default function AddSchedulePage() {
   const [searchParams] = useSearchParams();
 
   const day = searchParams.get("day") ?? "1";
+  
+  const lat = searchParams.get("lat");
+  const lng = searchParams.get("lng");
 
   const [place, setPlace] = useState("");
   const [memo, setMemo] = useState("");
 
   const handleAddSchedule = () => {
-    if (!place) {
+    if (!place.trim()) {
       alert("여행지를 입력해주세요.");
       return;
     }
 
-    const key = `schedule-${tripId}`;
-    const savedSchedules = JSON.parse(localStorage.getItem(key) || "[]");
-
-    const placeCoordinates: Record<string, { lat: number; lng: number }> = {
-      신주쿠: { lat: 35.6938, lng: 139.7034 },
-      아사쿠사: { lat: 35.7148, lng: 139.7967 },
-      긴자: { lat: 35.6717, lng: 139.765 },
-      오다이바: { lat: 35.6272, lng: 139.7768 },
-      도쿄역: { lat: 35.6812, lng: 139.7671 },
-      시부야: { lat: 35.6595, lng: 139.7005 },
-    };
-
     const trimmedPlace = place.trim();
 
-    const coordinate = placeCoordinates[trimmedPlace] || {
-      lat: 35.6762,
-      lng: 139.6503,
-    };
+    const geocoder = new google.maps.Geocoder();
 
-    const newSchedule = {
-      id: Date.now(),
-      day,
-      place: trimmedPlace,
-      memo,
-      lat: coordinate.lat,
-      lng: coordinate.lng,
-    };
+    geocoder.geocode(
+      {
+        address: trimmedPlace,
+        location:
+          lat && lng
+            ? new google.maps.LatLng(Number(lat), Number(lng))
+            : undefined,
+      },
+      (results: any, status: string) => {
+        console.log("GEOCODING STATUS:", status);
+        console.log("GEOCODING RESULTS:", results);
 
-    const updatedSchedules = [...savedSchedules, newSchedule];
+        if (status !== "OK" || !results || results.length === 0) {
+          alert("해당 장소의 위치를 찾을 수 없습니다.");
+          return;
+        }
 
-    localStorage.setItem(key, JSON.stringify(updatedSchedules));
+        const location = results[0].geometry.location;
 
-    navigate(`/trips/${tripId}`);
+        const key = `schedule-${tripId}`;
+        const savedSchedules = JSON.parse(localStorage.getItem(key) || "[]");
+
+        const newSchedule = {
+          id: Date.now(),
+          day,
+          place: trimmedPlace,
+          memo,
+          lat: location.lat(),
+          lng: location.lng(),
+        };
+
+        const updatedSchedules = [...savedSchedules, newSchedule];
+
+        localStorage.setItem(key, JSON.stringify(updatedSchedules));
+
+        navigate(`/trips/${tripId}`);
+      }
+    );
   };
-
 
   return (
     <div className="app-container">

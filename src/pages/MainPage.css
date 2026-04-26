@@ -10,16 +10,37 @@
 
 .main-page {
   width: 100%;
-  height: 100%;
+  min-height: 100%;
   padding: 20px 16px;
   box-sizing: border-box;
   background: #f8f8f8;
+  padding-bottom: 96px;
+  position: relative;
+}
+
+.fixed-add-trip-btn {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  width: 100%;
+  height: 72px;
+
+  border: none;
+  border-top: 1px solid #e5e7eb;
+  background: #f1f1f1;
+  color: #888;
+
+  font-size: 20px;
+  font-weight: 700;
 }
 
 .main-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-bottom: 24px;
 }
 
 .logo {
@@ -60,6 +81,7 @@
   overflow: hidden;
   background: black;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  margin-top: 24px;
 }
 
 .globe-viewer {
@@ -73,6 +95,9 @@
   border-radius: 24px;
   padding: 20px 16px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  max-height: 330px;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .trip-list-header {
@@ -86,6 +111,7 @@
   margin: 0;
   font-size: 28px;
 }
+
 
 .sort-btn {
   border: none;
@@ -108,9 +134,12 @@
   border: none;
   border-radius: 18px;
   padding: 14px;
+  padding-right: 44px;
   background: #f3f4f6;
   text-align: left;
   cursor: pointer;
+  box-sizing: border-box;
+  position: relative; 
 }
 
 /* .trip-flag {
@@ -132,14 +161,43 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
+  flex: 1;
+  min-width: 0;
 }
 
 .trip-title {
   font-size: 24px;
   font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .trip-date {
   font-size: 16px;
   color: #6b7280;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.trip-delete-btn {
+  position: absolute;
+  right: 14px;
+  top: 14px;
+
+  border: none;
+  background: transparent;
+  color: #9ca3af;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.trip-delete-btn:hover {
+  color: #ef4444;
+}
+
+.main-page {
+  padding-bottom: 96px;
 }

@@ -1,6 +1,11 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./AddTripPage.css";
+declare global {
+  interface Window {
+    google: any;
+  }
+}
 
 export default function AddTripPage() {
   const navigate = useNavigate();
@@ -11,29 +16,52 @@ export default function AddTripPage() {
   const [inviteCode, setInviteCode] = useState("");
 
   const handleAddTrip = () => {
-    if (!country || !startDate || !endDate) {
+    if (!country.trim() || !startDate || !endDate) {
       alert("국가와 날짜를 입력해주세요.");
       return;
     }
 
-    const savedTrips = JSON.parse(localStorage.getItem("trips") || "[]");
+    if (!window.google || !window.google.maps) {
+      alert("Google Maps가 아직 로드되지 않았습니다. 새로고침 후 다시 시도해주세요.");
+      return;
+    }
 
-    const newTrip = {
-      id: Date.now(),
-      title: `${country} 여행`,
-      country,
-      date: `${startDate} ~ ${endDate}`,
-      emoji: "🌍",
-      lat: 35.6895,
-      lng: 139.6917,
-      inviteCode,
-      days: [],
-    };
+    const trimmedCountry = country.trim();
+    const geocoder = new window.google.maps.Geocoder();
 
-    const updatedTrips = [...savedTrips, newTrip];
-    localStorage.setItem("trips", JSON.stringify(updatedTrips));
+    geocoder.geocode(
+      { address: trimmedCountry },
+      (results: any, status: string) => {
+        console.log("TRIP GEOCODING STATUS:", status);
+        console.log("TRIP GEOCODING RESULTS:", results);
 
-    navigate("/");
+        if (status !== "OK" || !results || results.length === 0) {
+          alert("해당 여행지의 위치를 찾을 수 없습니다.");
+          return;
+        }
+
+        const location = results[0].geometry.location;
+        const savedTrips = JSON.parse(localStorage.getItem("trips") || "[]");
+
+        const newTrip = {
+          id: Date.now(),
+          title: `${trimmedCountry} 여행`,
+          country: trimmedCountry,
+          date: `${startDate} ~ ${endDate}`,
+          startDate,
+          endDate,
+          emoji: "🌍",
+          lat: location.lat(),
+          lng: location.lng(),
+          inviteCode,
+          days: [],
+        };
+
+        localStorage.setItem("trips", JSON.stringify([...savedTrips, newTrip]));
+
+        navigate("/");
+      }
+    );
   };
 
   return (
