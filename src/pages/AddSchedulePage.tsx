@@ -71,7 +71,7 @@ export default function AddSchedulePage() {
       <div className="add-schedule-page">
         <header className="add-schedule-header">
           <button className="back-btn" onClick={() => navigate(-1)}>
-            ←
+            &lt;
           </button>
           <div>
             <h1>일정 추가</h1>
