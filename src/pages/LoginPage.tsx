@@ -1,36 +1,37 @@
 import { GoogleLogin } from "@react-oauth/google";
-import { jwtDecode } from "jwt-decode";
-import { useNavigate } from "react-router-dom";
-// import { googleLogin } from "../api/authApi"; 
+import { googleLogin } from "../api/authAPI";
 
 export default function LoginPage() {
-  const navigate = useNavigate();
-
-  const handleSuccess = (credentialResponse: any) => {
+  const handleSuccess = async (credentialResponse: any) => {
     if (!credentialResponse.credential) return;
 
-    const decoded: any = jwtDecode(credentialResponse.credential);
+    try {
+      const data = await googleLogin(credentialResponse.credential);
 
-    // 사용자 정보 저장
-    localStorage.setItem(
-      "user",
-      JSON.stringify({
-        name: decoded.name,
-        email: decoded.email,
-        picture: decoded.picture,
-      })
-    );
+      localStorage.setItem("accessToken", data.access_token);
+      localStorage.setItem("refreshToken", data.refresh_token);
 
-    // 메인 페이지 이동
-    window.location.href = "/";
+      localStorage.setItem(
+        "user",
+        JSON.stringify({
+          id: data.user.id,
+          name: data.user.nickname,
+          email: data.user.email,
+          picture: data.user.profile_image_url,
+        })
+      );
+
+      window.location.href = "/";
+    } catch (error) {
+      console.error(error);
+      alert("로그인 실패");
+    }
   };
 
   return (
     <div className="app-container">
       <div style={{ padding: "60px 30px", textAlign: "center" }}>
-        <h1 style={{ color: "#2563eb", marginBottom: "40px" }}>
-          TripLog
-        </h1>
+        <h1 style={{ color: "#2563eb", marginBottom: "40px" }}>TripLog</h1>
 
         <GoogleLogin
           onSuccess={handleSuccess}

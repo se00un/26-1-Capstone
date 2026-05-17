@@ -14,26 +14,30 @@
   padding: 20px 16px;
   box-sizing: border-box;
   background: #f8f8f8;
-  padding-bottom: 96px;
+  padding-bottom: 0;
   position: relative;
 }
 
 .fixed-add-trip-btn {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
 
-  width: 100%;
+  width: 402px;
+  max-width: calc(100vw - 48px);
   height: 72px;
 
   border: none;
+  border-radius: 0 0 32px 32px;
   border-top: 1px solid #e5e7eb;
+
   background: #f1f1f1;
   color: #888;
 
   font-size: 20px;
   font-weight: 700;
+  z-index: 9999;
 }
 
 .main-header {
@@ -98,6 +102,7 @@
   max-height: 330px;
   overflow-x: hidden;
   overflow-y: auto;
+  padding-bottom: 96px;
 }
 
 .trip-list-header {
@@ -124,6 +129,7 @@
   display: flex;
   flex-direction: column;
   gap: 14px;
+  padding-bottom: 100px;
 }
 
 .trip-item {

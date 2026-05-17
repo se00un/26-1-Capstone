@@ -18,6 +18,8 @@ function GlobeSection({ trips, onPinClick }: Props) {
   useEffect(() => {
     if (!viewerRef.current) return;
 
+    Cesium.Ion.defaultAccessToken = import.meta.env.VITE_CESIUM_ION_TOKEN;
+
     const viewer = new Cesium.Viewer(viewerRef.current, {
       timeline: false,
       animation: false,

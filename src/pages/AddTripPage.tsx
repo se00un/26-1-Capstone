@@ -1,6 +1,9 @@
-import { useState } from "react";
+import { createTrip } from "../api/tripAPI";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { acceptInvite } from "../api/inviteAPI";
 import "./AddTripPage.css";
+
 declare global {
   interface Window {
     google: any;
@@ -15,14 +18,44 @@ export default function AddTripPage() {
   const [endDate, setEndDate] = useState("");
   const [inviteCode, setInviteCode] = useState("");
 
-  const handleAddTrip = () => {
+  // 추가
+  const [isGoogleReady, setIsGoogleReady] = useState(false);
+
+  // 추가
+  useEffect(() => {
+    const timer = setInterval(() => {
+      if (window.google?.maps) {
+        setIsGoogleReady(true);
+        clearInterval(timer);
+      }
+    }, 300);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  
+
+  const handleAddTrip = async () => {
+    if (inviteCode.trim()) {
+      try {
+        await acceptInvite(inviteCode.trim());
+        alert("초대된 여행에 참여했습니다");
+        navigate("/");
+        return
+      } catch (error) {
+        console.error("초대 코드 참여 실패:", error);
+        alert("초대 코드가 올바르지 않거나 만료되었습니다.");
+        return;
+      }
+    }
+
     if (!country.trim() || !startDate || !endDate) {
       alert("국가와 날짜를 입력해주세요.");
       return;
     }
 
-    if (!window.google || !window.google.maps) {
-      alert("Google Maps가 아직 로드되지 않았습니다. 새로고침 후 다시 시도해주세요.");
+    if (!isGoogleReady || !window.google?.maps) {
+      alert("지도 정보를 불러오는 중입니다. 잠시 후 다시 시도해주세요.");
       return;
     }
 
@@ -41,25 +74,24 @@ export default function AddTripPage() {
         }
 
         const location = results[0].geometry.location;
-        const savedTrips = JSON.parse(localStorage.getItem("trips") || "[]");
 
-        const newTrip = {
-          id: Date.now(),
+        console.log("여행 생성 요청 보냄");
+
+        createTrip({
           title: `${trimmedCountry} 여행`,
           country: trimmedCountry,
-          date: `${startDate} ~ ${endDate}`,
-          startDate,
-          endDate,
-          emoji: "🌍",
-          lat: location.lat(),
-          lng: location.lng(),
-          inviteCode,
-          days: [],
-        };
-
-        localStorage.setItem("trips", JSON.stringify([...savedTrips, newTrip]));
-
-        navigate("/");
+          start_date: startDate,
+          end_date: endDate,
+          latitude: location.lat(),
+          longitude: location.lng(),
+        })
+          .then(() => {
+            navigate("/");
+          })
+          .catch((err) => {
+            console.error("여행 생성 실패:", err);
+            alert("여행 생성에 실패했습니다.");
+          });
       }
     );
   };
@@ -112,8 +144,12 @@ export default function AddTripPage() {
           />
         </div>
 
-        <button className="primary-btn" onClick={handleAddTrip}>
-          추가하기
+        <button
+          className="primary-btn"
+          onClick={handleAddTrip}
+          disabled={!isGoogleReady}
+        >
+          {isGoogleReady ? "추가하기" : "지도 로딩 중..."}
         </button>
       </div>
     </div>

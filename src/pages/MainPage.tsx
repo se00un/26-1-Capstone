@@ -1,3 +1,5 @@
+import { getMyTrips } from "../api/tripAPI";
+import { createRoute, getRoutesByTripId } from "../api/routeAPI";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import GlobeSection from "../components/GlobeSection";
@@ -7,23 +9,62 @@ export default function MainPage() {
   const navigate = useNavigate();
   const [trips, setTrips] = useState<any[]>([]);
 
-  const loadTrips = () => {
-    const savedTrips = JSON.parse(localStorage.getItem("trips") || "[]");
-    setTrips(savedTrips);
+  const loadTrips = async () => {
+    try {
+      console.log("accessToken:", localStorage.getItem("accessToken"));
+
+      const data = await getMyTrips();
+      console.log("my trips:", data);
+
+      const tripsWithPins = await Promise.all(
+        data.map(async (trip: any) => {
+          try {
+            const routes = await getRoutesByTripId(trip.id);
+            console.log(`${trip.title} routes:`, routes);
+
+            const places = routes.flatMap((route: any) => route.places || []);
+            const firstPlace = places[0];
+
+            return {
+              ...trip,
+              lat: firstPlace?.latitude ?? null,
+              lng: firstPlace?.longitude ?? null,
+            };
+          } catch (routeErr) {
+            console.error(`${trip.title} route 조회 실패:`, routeErr);
+
+            return {
+              ...trip,
+              lat: null,
+              lng: null,
+            };
+          }
+        })
+      );
+
+      console.log("tripsWithPins:", tripsWithPins);
+      setTrips(tripsWithPins);
+    } catch (err) {
+      console.error("내 여행 목록 조회 실패:", err);
+    }
   };
+
 
   useEffect(() => {
     loadTrips();
   }, []);
 
+
   const tripPins = useMemo(
     () =>
-      trips.map((trip) => ({
-        id: trip.id,
-        title: trip.title,
-        lat: trip.lat,
-        lng: trip.lng,
-      })),
+      trips
+        .filter((trip) => trip.lat != null && trip.lng != null)
+        .map((trip) => ({
+          id: trip.id,
+          title: trip.title,
+          lat: trip.lat,
+          lng: trip.lng,
+        })),
     [trips]
   );
 
@@ -82,7 +123,9 @@ export default function MainPage() {
 
                 <div className="trip-info">
                   <div className="trip-title">{trip.title}</div>
-                  <div className="trip-date">{trip.date}</div>
+                  <div className="trip-date">
+                    {trip.date ?? `${trip.start_date} ~ ${trip.end_date}`}
+                  </div>
                 </div>
 
                 <button

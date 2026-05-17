@@ -1,8 +1,15 @@
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useState } from "react";
 import RouteMap from "../components/RouteMap";
 import SortableScheduleItem from "../components/SortableScheduleItem";
+import { getMyTrips } from "../api/tripAPI";
+import {
+  getRoutesByTripId,
+  deletePlaceFromRoute,
+  updateRoutePlaceOrder,
+} from "../api/routeAPI";
 import "./TripDetailPage.css";
+
 import {
   DndContext,
   closestCenter,
@@ -40,71 +47,144 @@ export default function TripDetailPage() {
   const navigate = useNavigate();
   const { tripId } = useParams();
 
-  const savedTrips = JSON.parse(localStorage.getItem("trips") || "[]");
+  const [trip, setTrip] = useState<any>(null);
+  const [savedSchedules, setSavedSchedules] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedDay, setSelectedDay] = useState("1");
 
-  const savedTrip = savedTrips.find(
-    (trip: any) => String(trip.id) === String(tripId)
-  );
+  const loadTripDetail = async () => {
+    try {
+      if (!tripId) return;
 
-  const trip =
-    savedTrip && {
-      title: savedTrip.title,
-      date: savedTrip.date.replace("~", "-"),
-      center: {
-        lat: savedTrip.lat,
-        lng: savedTrip.lng,
-      },
-      places: [],
-      days: createTripDays(savedTrip.startDate, savedTrip.endDate),
-    };
+      const trips = await getMyTrips();
+      const foundTrip = trips.find(
+        (item: any) => String(item.id) === String(tripId)
+      );
 
-  if (!trip) {
-    return (
-      <div className="app-container">
-        <div className="detail-page">
-          <button className="back-btn" onClick={() => navigate(-1)}>
-            ✕
-          </button>
-          <h1>존재하지 않는 여행입니다.</h1>
-        </div>
-      </div>
-    );
-  }
+      if (!foundTrip) {
+        setTrip(null);
+        return;
+      }
 
-  const [savedSchedules, setSavedSchedules] = useState<any[]>(() =>
-    JSON.parse(localStorage.getItem(`schedule-${tripId}`) || "[]")
-  );
+      const routes = await getRoutesByTripId(tripId);
+      console.log("routes:", routes);
 
-  const schedulePlaces = savedSchedules.map((schedule: any) => ({
-    id: schedule.id,
-    name: schedule.place,
-    lat: schedule.lat,
-    lng: schedule.lng,
-  }));
+      const days = createTripDays(foundTrip.start_date, foundTrip.end_date);
 
-  const handleDeleteSchedule = (scheduleId: number) => {
-    const key = `schedule-${tripId}`;
+      const schedules = routes.flatMap((route: any) =>
+        (route.places || []).map((place: any, index: number) => ({
+          id: place.id,
+          routeId: route.id,
+          day: route.title?.replace("일차", "") || "1",
+          place: place.place_name,
+          memo: place.memo,
+          lat: place.latitude,
+          lng: place.longitude,
+          visit_order: place.visit_order ?? index + 1,
+        }))
+      );
 
-    const updated = savedSchedules.filter(
-      (item: any) => item.id !== scheduleId
-    );
+      const mapPlaces = savedSchedules
+      .filter(
+        (schedule: any) => String(schedule.day) === selectedDay
+      )
+      .sort(
+        (a: any, b: any) => a.visit_order - b.visit_order
+      )
+      .map((schedule: any) => ({
+        id: schedule.id,
+        name: schedule.place,
+        lat: schedule.lat,
+        lng: schedule.lng,
+      }));
 
-    setSavedSchedules(updated);
-    localStorage.setItem(key, JSON.stringify(updated));
+      const firstPlace = mapPlaces[0];
+
+      // const tripCenter =
+      //   foundTrip.lat != null && foundTrip.lng != null
+      //     ? {
+      //         lat: Number(foundTrip.lat),
+      //         lng: Number(foundTrip.lng),
+      //       }
+      //     : firstPlace
+      //       ? {
+      //           lat: Number(firstPlace.lat),
+      //           lng: Number(firstPlace.lng),
+      //         }
+      //       : {
+      //           lat: 37.5665,
+      //           lng: 126.978,
+      //         };
+
+      // setTrip({
+      //   id: foundTrip.id,
+      //   title: foundTrip.title,
+      //   date: `${foundTrip.start_date} - ${foundTrip.end_date}`,
+      //   // center: firstPlace
+      //   //   ? { lat: firstPlace.lat, lng: firstPlace.lng }
+      //   //   : { lat: 37.5665, lng: 126.978 },
+      //   center: tripCenter,
+      //   days,
+      // });
+
+      const tripCenter = firstPlace
+        ? {
+            lat: Number(firstPlace.lat),
+            lng: Number(firstPlace.lng),
+          }
+        : {
+            lat: 37.5665,
+            lng: 126.978,
+          };
+
+      setTrip({
+        id: foundTrip.id,
+        title: foundTrip.title,
+        date: `${foundTrip.start_date} - ${foundTrip.end_date}`,
+        center: tripCenter,
+        days,
+      });
+      
+
+      setSavedSchedules(schedules);
+    } catch (error) {
+      console.error("여행 상세 조회 실패:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleDragEnd = (event: DragEndEvent) => {
+  useEffect(() => {
+    loadTripDetail();
+  }, [tripId]);
+
+  const handleDeleteSchedule = async (scheduleId: number) => {
+    try {
+      const target = savedSchedules.find((item) => item.id === scheduleId);
+
+      if (!target) return;
+
+      await deletePlaceFromRoute(target.routeId, target.id);
+
+      setSavedSchedules((prev) =>
+        prev.filter((item) => item.id !== scheduleId)
+      );
+    } catch (error) {
+      console.error("일정 삭제 실패:", error);
+      alert("일정 삭제에 실패했습니다.");
+    }
+  };
+
+  const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
     const activeItem = savedSchedules.find(
       (item: any) => item.id === active.id
     );
-    const overItem = savedSchedules.find(
-      (item: any) => item.id === over.id
-    );
+    const overItem = savedSchedules.find((item: any) => item.id === over.id);
 
-    // 다른 day면 이동 금지
+    if (!activeItem || !overItem) return;
     if (activeItem.day !== overItem.day) return;
 
     const sameDayItems = savedSchedules.filter(
@@ -126,16 +206,53 @@ export default function TripDetailPage() {
     });
 
     setSavedSchedules(updated);
-    localStorage.setItem(`schedule-${tripId}`, JSON.stringify(updated));
+
+    try {
+      const orderedPlaceIds = updated
+        .filter((item: any) => item.day === activeItem.day)
+        .map((item: any) => item.id);
+
+      await updateRoutePlaceOrder(activeItem.routeId, orderedPlaceIds);
+    } catch (error) {
+      console.error("순서 변경 저장 실패:", error);
+    }
   };
 
-  const mapPlaces = [...trip.places, ...schedulePlaces];
+  const mapPlaces = savedSchedules.map((schedule: any) => ({
+    id: schedule.id,
+    name: schedule.place,
+    lat: schedule.lat,
+    lng: schedule.lng,
+  }));
+
+  if (loading) {
+    return (
+      <div className="app-container">
+        <div className="detail-page">
+          <h1>불러오는 중...</h1>
+        </div>
+      </div>
+    );
+  }
+
+  if (!trip) {
+    return (
+      <div className="app-container">
+        <div className="detail-page">
+          <button className="back-btn" onClick={() => navigate("/")}>
+            ✕
+          </button>
+          <h1>존재하지 않는 여행입니다.</h1>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="app-container">
       <div className="detail-page">
         <header className="detail-header">
-          <button className="back-btn" onClick={() => navigate(-1)}>
+          <button className="back-btn" onClick={() => navigate("/")}>
             ✕
           </button>
 
@@ -151,12 +268,21 @@ export default function TripDetailPage() {
 
         <section className="day-section">
           {trip.days.map((item: { day: string; date: string }, index: number) => {
+            const dayNumber = String(index + 1);
+
             const daySchedules = savedSchedules.filter(
-              (schedule: any) => String(schedule.day) === String(index + 1)
+              (schedule: any) => String(schedule.day) === dayNumber
             );
 
             return (
-              <div className="day-card" key={item.day}>
+              // <div className="day-card" key={item.day}>
+              <div
+                className={`day-card ${
+                  selectedDay === dayNumber ? "selected-day" : ""
+                }`}
+                key={item.day}
+                onClick={() => setSelectedDay(dayNumber)}
+              >
                 <div className="day-card-header">
                   <div className="day-title">
                     <strong>{item.day}</strong>
@@ -167,7 +293,7 @@ export default function TripDetailPage() {
                     className="add-btn"
                     onClick={() =>
                       navigate(
-                        `/trips/${tripId}/schedule/new?day=${index + 1}&lat=${trip.center.lat}&lng=${trip.center.lng}`
+                        `/trips/${tripId}/schedule/new?day=${dayNumber}&lat=${trip.center.lat}&lng=${trip.center.lng}`
                       )
                     }
                   >
@@ -176,20 +302,25 @@ export default function TripDetailPage() {
                 </div>
 
                 {daySchedules.length > 0 && (
-                  <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                  <DndContext
+                    collisionDetection={closestCenter}
+                    onDragEnd={handleDragEnd}
+                  >
                     <SortableContext
                       items={daySchedules.map((schedule: any) => schedule.id)}
                       strategy={verticalListSortingStrategy}
                     >
                       <div className="schedule-list">
-                        {daySchedules.map((schedule: any, scheduleIndex: number) => (
-                          <SortableScheduleItem
-                            key={schedule.id}
-                            schedule={schedule}
-                            scheduleIndex={scheduleIndex}
-                            onDelete={handleDeleteSchedule}
-                          />
-                        ))}
+                        {daySchedules.map(
+                          (schedule: any, scheduleIndex: number) => (
+                            <SortableScheduleItem
+                              key={schedule.id}
+                              schedule={schedule}
+                              scheduleIndex={scheduleIndex}
+                              onDelete={handleDeleteSchedule}
+                            />
+                          )
+                        )}
                       </div>
                     </SortableContext>
                   </DndContext>

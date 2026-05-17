@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { createInvite } from "../api/inviteAPI";
 import "./FriendsPage.css";
 
 type Member = {
@@ -12,40 +13,36 @@ export default function FriendsPage() {
   const navigate = useNavigate();
   const { tripId } = useParams();
 
-  const storageKey = `friends-${tripId}`;
+  const [members] = useState<Member[]>([
+    { id: 1, name: "닉네임", role: "owner" },
+  ]);
 
-  const [members, setMembers] = useState<Member[]>(() => {
-    const saved = localStorage.getItem(storageKey);
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+  const [createdInviteCode, setCreatedInviteCode] = useState("");
 
-    if (saved) {
-      return JSON.parse(saved);
+  const handleCreateInvite = async () => {
+    try {
+      if (!tripId) return;
+
+      const data = await createInvite(tripId);
+
+      console.log("초대 코드 생성:", data);
+
+      setCreatedInviteCode(data.invite_code);
+      setIsInviteModalOpen(true);
+    } catch (error) {
+      console.error("초대 코드 생성 실패:", error);
+      alert("초대 코드 생성에 실패했습니다.");
     }
+  };
 
-    return [{ id: 1, name: "나", role: "owner" }];
-  });
+  const handleCopyInviteCode = async () => {
+    if (!createdInviteCode) return;
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [inviteCode, setInviteCode] = useState("");
+    await navigator.clipboard.writeText(createdInviteCode);
+    alert("초대 코드가 복사되었습니다.");
 
-  const handleAddFriend = () => {
-    if (!inviteCode.trim()) {
-      alert("초대 코드를 입력해주세요.");
-      return;
-    }
-
-    const newFriend: Member = {
-      id: Date.now(),
-      name: `친구 ${members.length}`,
-      role: "editor",
-    };
-
-    const updatedMembers = [...members, newFriend];
-
-    setMembers(updatedMembers);
-    localStorage.setItem(storageKey, JSON.stringify(updatedMembers));
-
-    setInviteCode("");
-    setIsModalOpen(false);
+    setIsInviteModalOpen(false);
   };
 
   return (
@@ -71,34 +68,37 @@ export default function FriendsPage() {
               </span>
             </div>
           ))}
-        </div>
 
-        <div className="invite-section">
-          <button className="invite-btn" onClick={() => setIsModalOpen(true)}>
-            친구 초대하기
+          <button
+            type="button"
+            className="friend-item add-friend-row"
+            onClick={handleCreateInvite}
+          >
+            <div className="friend-left">
+              <div className="avatar">?</div>
+              <span className="friend-name">친구 초대하기</span>
+            </div>
+
+            <span className="role-badge editor">+ editor</span>
           </button>
         </div>
 
-        {isModalOpen && (
+        {isInviteModalOpen && (
           <div className="modal-backdrop">
             <div className="invite-modal">
               <button
                 className="modal-close"
-                onClick={() => setIsModalOpen(false)}
+                onClick={() => setIsInviteModalOpen(false)}
               >
                 ✕
               </button>
 
               <h2>친구 초대 코드</h2>
 
-              <input
-                value={inviteCode}
-                onChange={(e) => setInviteCode(e.target.value)}
-                placeholder="초대 코드를 입력하세요"
-              />
+              <div className="invite-code-box">{createdInviteCode}</div>
 
-              <button className="modal-add-btn" onClick={handleAddFriend}>
-                추가하기
+              <button className="modal-add-btn" onClick={handleCopyInviteCode}>
+                복사하기
               </button>
             </div>
           </div>
