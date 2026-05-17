@@ -84,48 +84,14 @@ export default function TripDetailPage() {
         }))
       );
 
-      const mapPlaces = savedSchedules
-      .filter(
-        (schedule: any) => String(schedule.day) === selectedDay
-      )
-      .sort(
-        (a: any, b: any) => a.visit_order - b.visit_order
-      )
-      .map((schedule: any) => ({
-        id: schedule.id,
-        name: schedule.place,
-        lat: schedule.lat,
-        lng: schedule.lng,
-      }));
+      if (schedules.length > 0) {
+        setSelectedDay(String(schedules[0].day));
+      }
 
-      const firstPlace = mapPlaces[0];
-
-      // const tripCenter =
-      //   foundTrip.lat != null && foundTrip.lng != null
-      //     ? {
-      //         lat: Number(foundTrip.lat),
-      //         lng: Number(foundTrip.lng),
-      //       }
-      //     : firstPlace
-      //       ? {
-      //           lat: Number(firstPlace.lat),
-      //           lng: Number(firstPlace.lng),
-      //         }
-      //       : {
-      //           lat: 37.5665,
-      //           lng: 126.978,
-      //         };
-
-      // setTrip({
-      //   id: foundTrip.id,
-      //   title: foundTrip.title,
-      //   date: `${foundTrip.start_date} - ${foundTrip.end_date}`,
-      //   // center: firstPlace
-      //   //   ? { lat: firstPlace.lat, lng: firstPlace.lng }
-      //   //   : { lat: 37.5665, lng: 126.978 },
-      //   center: tripCenter,
-      //   days,
-      // });
+      const firstPlace = schedules.find(
+        (schedule: any) =>
+          schedule.lat != null && schedule.lng != null
+      );
 
       const tripCenter = firstPlace
         ? {
@@ -144,7 +110,6 @@ export default function TripDetailPage() {
         center: tripCenter,
         days,
       });
-      
 
       setSavedSchedules(schedules);
     } catch (error) {
@@ -218,12 +183,27 @@ export default function TripDetailPage() {
     }
   };
 
-  const mapPlaces = savedSchedules.map((schedule: any) => ({
-    id: schedule.id,
-    name: schedule.place,
-    lat: schedule.lat,
-    lng: schedule.lng,
-  }));
+  const mapPlaces = savedSchedules
+    .filter((schedule: any) => String(schedule.day) === selectedDay)
+    .sort((a: any, b: any) => a.visit_order - b.visit_order)
+    .map((schedule: any) => ({
+      id: schedule.id,
+      name: schedule.place,
+      lat: Number(schedule.lat),
+      lng: Number(schedule.lng),
+    }));
+
+  const currentCenter =
+    mapPlaces.length > 0
+      ? {
+          lat: mapPlaces[0].lat,
+          lng: mapPlaces[0].lng,
+        }
+      : trip?.center || {
+          lat: 37.5665,
+          lng: 126.978,
+        };
+
 
   if (loading) {
     return (
@@ -263,7 +243,11 @@ export default function TripDetailPage() {
         </header>
 
         <section className="map-preview">
-          <RouteMap center={trip.center} places={mapPlaces} />
+          <RouteMap
+            key={`${selectedDay}-${currentCenter?.lat}-${currentCenter?.lng}`}
+            center={currentCenter}
+            places={mapPlaces}
+          />
         </section>
 
         <section className="day-section">
