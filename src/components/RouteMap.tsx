@@ -6,6 +6,11 @@ import {
   useMap,
 } from "@vis.gl/react-google-maps";
 
+console.log(
+  "GOOGLE KEY:",
+  import.meta.env.VITE_GOOGLE_MAPS_API_KEY
+);
+
 type Place = {
   id: number;
   name: string;
