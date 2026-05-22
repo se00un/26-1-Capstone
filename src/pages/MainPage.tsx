@@ -1,4 +1,4 @@
-import { getMyTrips } from "../api/tripAPI";
+import { getMyTrips, deleteTrip } from "../api/tripAPI";
 import { createRoute, getRoutesByTripId } from "../api/routeAPI";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -69,22 +69,29 @@ export default function MainPage() {
   );
 
   const handleTripClick = (tripId: number) => {
-    navigate(`/trips/${tripId}`);
-  };
+      navigate(`/trips/${tripId}`);
+    };
 
-  const handleDeleteTrip = (e: React.MouseEvent, tripId: number) => {
+    const handleDeleteTrip = async (
+    e: React.MouseEvent,
+    tripId: number
+  ) => {
     e.stopPropagation();
 
-    const savedTrips = JSON.parse(localStorage.getItem("trips") || "[]");
-
-    const updatedTrips = savedTrips.filter(
-      (trip: any) => Number(trip.id) !== Number(tripId)
+    const confirmed = window.confirm(
+      "이 여행을 삭제하시겠습니까?"
     );
 
-    localStorage.setItem("trips", JSON.stringify(updatedTrips));
-    localStorage.removeItem(`schedule-${tripId}`);
+    if (!confirmed) return;
 
-    loadTrips();
+    try {
+      await deleteTrip(tripId);
+
+      loadTrips();
+    } catch (error) {
+      console.error("여행 삭제 실패:", error);
+      alert("여행 삭제에 실패했습니다.");
+    }
   };
 
   return (
@@ -94,14 +101,6 @@ export default function MainPage() {
           <h1 className="logo">TripLog</h1>
           <button className="profile-btn">👤</button>
         </header>
-
-        {/* <button
-          className="add-trip-btn"
-          onClick={() => navigate("/trips/new")}
-        >
-          여행 추가
-        </button> */}
-
         <section className="globe-card">
           <GlobeSection trips={tripPins} onPinClick={handleTripClick} />
         </section>

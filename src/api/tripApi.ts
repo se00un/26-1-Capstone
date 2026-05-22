@@ -13,6 +13,18 @@ export const getMyTrips = async () => {
   return res.json();
 };
 
+export const deleteTrip = async (tripId: number | string) => {
+  const res = await fetch(`${API_BASE_URL}/api/trips/${tripId}`, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${getAccessToken()}`,
+    },
+  });
+
+  if (!res.ok) throw new Error("여행 삭제 실패");
+  return res.json();
+};
+
 export const createTrip = async (tripData: {
   title: string;
   country: string;
