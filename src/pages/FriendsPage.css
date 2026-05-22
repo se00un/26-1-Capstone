@@ -25,8 +25,22 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 18px 4px;
-  border-bottom: 1px solid #e5e7eb;
+
+  padding: 20px;
+  margin-bottom: 16px;
+
+  background: white;
+  border: none;
+  border-radius: 24px;
+
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+}
+
+.add-friend-row {
+  width: 100%;
+  border: none;
+  outline: none;
+  background: white;
 }
 
 .friend-left {
@@ -131,6 +145,42 @@
   border: none;
   border-radius: 8px;
   background: #bfdbfe;
+  color: #2563eb;
+  font-weight: 700;
+}
+
+.friends-page {
+  background: #f5f6f8; 
+  min-height: 100%;
+  padding: 24px;
+  padding-bottom: 90px;
+  box-sizing: border-box;
+}
+
+.bottom-tab {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 72px;
+  background: white;
+  border-top: 1px solid #eee;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  border-radius: 0 0 32px 32px;
+  z-index: 20;
+}
+
+.bottom-tab button {
+  border: none;
+  background: none;
+  font-size: 18px;
+  color: #111;
+  font-weight: 500;
+}
+
+.bottom-tab .active-tab {
   color: #2563eb;
   font-weight: 700;
 }

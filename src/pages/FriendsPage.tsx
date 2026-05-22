@@ -25,9 +25,6 @@ export default function FriendsPage() {
       if (!tripId) return;
 
       const data = await createInvite(tripId);
-
-      console.log("초대 코드 생성:", data);
-
       setCreatedInviteCode(data.invite_code);
       setIsInviteModalOpen(true);
     } catch (error) {
@@ -41,7 +38,6 @@ export default function FriendsPage() {
 
     await navigator.clipboard.writeText(createdInviteCode);
     alert("초대 코드가 복사되었습니다.");
-
     setIsInviteModalOpen(false);
   };
 
@@ -49,7 +45,7 @@ export default function FriendsPage() {
     <div className="app-container">
       <div className="friends-page">
         <header className="friends-header">
-          <button className="back-btn" onClick={() => navigate(-1)}>
+          <button className="back-btn" onClick={() => navigate(`/trips/${tripId}`)}>
             ✕
           </button>
           <h1>친구</h1>
@@ -103,6 +99,15 @@ export default function FriendsPage() {
             </div>
           </div>
         )}
+
+        <nav className="bottom-tab">
+          <button onClick={() => navigate(`/trips/${tripId}`)}>일정</button>
+          <button onClick={() => navigate(`/trips/${tripId}/budget`)}>
+            예산
+          </button>
+          <button className="active-tab">친구</button>
+          <button>리포트</button>
+        </nav>
       </div>
     </div>
   );
