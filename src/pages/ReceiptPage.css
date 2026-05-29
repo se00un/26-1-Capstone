@@ -1,0 +1,81 @@
+.receipt-page {
+  width: 100%;
+  min-height: 100%;
+  padding: 24px 20px 40px;
+  box-sizing: border-box;
+  background: #f8f8f8;
+  display: flex;
+  flex-direction: column;
+}
+
+.receipt-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.receipt-header h1 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 800;
+}
+
+.receipt-dropzone {
+  width: 100%;
+  height: 420px;
+  border: none;
+  border-radius: 8px;
+  background: #ececec;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  cursor: pointer;
+  /* 모서리 가이드 느낌 */
+  outline: 2px solid transparent;
+  position: relative;
+}
+
+.receipt-dropzone img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.receipt-placeholder {
+  color: #9ca3af;
+  font-size: 16px;
+}
+
+.receipt-guide {
+  margin: 18px 0 0;
+  text-align: center;
+  color: #6b7280;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.receipt-recognize-btn {
+  display: block;
+  width: 200px;
+  margin: 32px auto 0;
+  height: 50px;
+  border: none;
+  border-radius: 12px;
+  background: #c7d7fe;
+  color: #2563eb;
+  font-size: 17px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.receipt-manual-link {
+  margin: 16px auto 0;
+  border: none;
+  background: transparent;
+  color: #9ca3af;
+  font-size: 13px;
+  text-decoration: underline;
+  cursor: pointer;
+}

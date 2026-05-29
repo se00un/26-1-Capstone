@@ -1,46 +1,94 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { getMyTrips } from "../api/tripAPI";
+import { getExpenses } from "../api/expenseAPI";
+import { CATEGORY_ICON } from "../constants/categories";
 import "./BudgetPage.css";
 
-const createTripDays = (startDate: string, endDate: string) => {
+type TripDay = {
+  dayNumber: number;
+  label: string;
+  date: string;
+  iso: string;
+};
+
+const pad = (n: number) => String(n).padStart(2, "0");
+
+const createTripDays = (startDate: string, endDate: string): TripDay[] => {
   const start = new Date(startDate);
   const end = new Date(endDate);
-
-  const days = [];
+  const days: TripDay[] = [];
   const current = new Date(start);
   let index = 1;
 
   while (current <= end) {
     days.push({
-      day: `${index}일차`,
-      date: `${current.getMonth() + 1}월 ${current.getDate()}일`,
       dayNumber: index,
+      label: `${index}일차`,
+      date: `${current.getMonth() + 1}월 ${current.getDate()}일`,
+      iso: `${current.getFullYear()}-${pad(current.getMonth() + 1)}-${pad(
+        current.getDate()
+      )}`,
     });
-
     current.setDate(current.getDate() + 1);
     index++;
   }
-
   return days;
 };
+
+const won = (n: number) => Math.round(n).toLocaleString("ko-KR");
 
 export default function BudgetPage() {
   const navigate = useNavigate();
   const { tripId } = useParams();
 
-  const [isSettingOpen, setIsSettingOpen] = useState(false);
+  const [trip, setTrip] = useState<any>(null);
+  const [days, setDays] = useState<TripDay[]>([]);
+  const [expenses, setExpenses] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const savedTrips = JSON.parse(localStorage.getItem("trips") || "[]");
-  const savedTrip = savedTrips.find(
-    (trip: any) => String(trip.id) === String(tripId)
-  );
+  const load = async () => {
+    if (!tripId) return;
+    try {
+      const trips = await getMyTrips();
+      const found = trips.find((t: any) => String(t.id) === String(tripId));
+      setTrip(found ?? null);
+      if (found) {
+        setDays(createTripDays(found.start_date, found.end_date));
+      }
 
-  if (!savedTrip) {
+      const expenseList = await getExpenses(tripId);
+      setExpenses(Array.isArray(expenseList) ? expenseList : []);
+    } catch (error) {
+      console.error("예산 화면 로딩 실패:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    load();
+  }, [tripId]);
+
+  const expensesByDay = (iso: string) =>
+    expenses.filter((e) => String(e.expense_date).slice(0, 10) === iso);
+
+  if (loading) {
+    return (
+      <div className="app-container">
+        <div className="budget-page">
+          <h1>불러오는 중...</h1>
+        </div>
+      </div>
+    );
+  }
+
+  if (!trip) {
     return (
       <div className="app-container">
         <div className="budget-page">
           <button className="back-btn" onClick={() => navigate(-1)}>
-            &lt;
+            ✕
           </button>
           <h1>존재하지 않는 여행입니다.</h1>
         </div>
@@ -48,52 +96,78 @@ export default function BudgetPage() {
     );
   }
 
-  const days = createTripDays(savedTrip.startDate, savedTrip.endDate);
-
-  const savedSchedules = JSON.parse(
-    localStorage.getItem(`schedule-${tripId}`) || "[]"
-  );
-
   return (
     <div className="app-container">
       <div className="budget-page">
-        <header className="budget-header">
-          <button className="back-btn" onClick={() => navigate(-1)}>
-            &lt;
+        <header className="budget-top">
+          <button
+            className="back-btn"
+            onClick={() => navigate(`/trips/${tripId}`)}
+          >
+            ✕
           </button>
-          <h1>예산</h1>
-        </header>
+          <h1 className="budget-trip-title">{trip.title}</h1>
 
-        <button
-          className="budget-setting-btn"
-          onClick={() => setIsSettingOpen(true)}
-        >
-          예산 설정하기
-        </button>
+          <div className="budget-top-actions">
+            <button
+              className="settle-btn"
+              onClick={() => navigate(`/trips/${tripId}/settle`)}
+            >
+              정산하기
+            </button>
+            <button
+              className="manage-btn"
+              onClick={() => navigate(`/trips/${tripId}/budget/manage`)}
+            >
+              예산 관리
+            </button>
+          </div>
+        </header>
 
         <section className="budget-days">
           {days.map((day) => {
-            const daySchedules = savedSchedules.filter(
-              (schedule: any) => String(schedule.day) === String(day.dayNumber)
-            );
+            const dayExpenses = expensesByDay(day.iso);
 
             return (
-              <div className="budget-day-card" key={day.day}>
+              <div className="budget-day-card" key={day.dayNumber}>
                 <div className="budget-day-header">
                   <div>
-                    <strong>{day.day}</strong>
+                    <strong>{day.label}</strong>
                     <span>{day.date}</span>
                   </div>
 
-                  <button className="budget-add-btn">추가</button>
+                  <div className="budget-day-tools">
+                    <span className="reorder-icon">⇅</span>
+                    <button
+                      className="budget-add-btn"
+                      onClick={() =>
+                        navigate(
+                          `/trips/${tripId}/budget/expense/new?day=${day.dayNumber}&date=${day.iso}`
+                        )
+                      }
+                    >
+                      추가
+                    </button>
+                  </div>
                 </div>
 
-                {daySchedules.length > 0 && (
-                  <div className="budget-schedule-list">
-                    {daySchedules.map((schedule: any) => (
-                      <div className="budget-schedule-item" key={schedule.id}>
-                        <span>{schedule.place}</span>
-                        <small>{schedule.memo}</small>
+                {dayExpenses.length > 0 && (
+                  <div className="budget-expense-list">
+                    {dayExpenses.map((e, idx) => (
+                      <div className="budget-expense-item" key={e.id}>
+                        <span
+                          className={`expense-badge ${
+                            e.expense_type === "shared" ? "shared" : "personal"
+                          }`}
+                        >
+                          {idx + 1}
+                        </span>
+                        <span className="expense-title">
+                          {e.title} {CATEGORY_ICON[e.category] ?? ""}
+                        </span>
+                        <span className="expense-amount">
+                          -{won(Number(e.amount_krw ?? e.amount_original ?? 0))}
+                        </span>
                       </div>
                     ))}
                   </div>
@@ -102,36 +176,6 @@ export default function BudgetPage() {
             );
           })}
         </section>
-
-        {isSettingOpen && (
-          <div className="budget-modal-backdrop">
-            <div className="budget-modal">
-              <button
-                className="budget-modal-close"
-                onClick={() => setIsSettingOpen(false)}
-              >
-                ✕
-              </button>
-
-              <h2>예산 설정</h2>
-
-              <BudgetInput label="총 예산" />
-              <BudgetInput label="교통" />
-              <BudgetInput label="숙소" />
-              <BudgetInput label="음식" />
-              <BudgetInput label="관광" />
-              <BudgetInput label="쇼핑" />
-              <BudgetInput label="기타" />
-
-              <button
-                className="budget-complete-btn"
-                onClick={() => setIsSettingOpen(false)}
-              >
-                설정 완료
-              </button>
-            </div>
-          </div>
-        )}
 
         <nav className="bottom-tab">
           <button onClick={() => navigate(`/trips/${tripId}`)}>일정</button>
@@ -142,15 +186,6 @@ export default function BudgetPage() {
           <button>리포트</button>
         </nav>
       </div>
-    </div>
-  );
-}
-
-function BudgetInput({ label }: { label: string }) {
-  return (
-    <div className="budget-input-row">
-      <label>{label}</label>
-      <input type="number" />
     </div>
   );
 }

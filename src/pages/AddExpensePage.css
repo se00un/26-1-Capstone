@@ -1,0 +1,131 @@
+.add-expense-page {
+  width: 100%;
+  min-height: 100%;
+  padding: 24px 20px 40px;
+  box-sizing: border-box;
+  background: #f8f8f8;
+}
+
+.add-expense-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.add-expense-header h1 {
+  flex: 1;
+  margin: 0;
+  font-size: 26px;
+  font-weight: 800;
+}
+
+.receipt-link {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  border: none;
+  background: transparent;
+  color: #2563eb;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.receipt-link {
+  font-size: 22px;
+}
+
+.receipt-link span {
+  font-size: 11px;
+}
+
+.add-expense-day {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 22px;
+}
+
+.add-expense-day strong {
+  font-size: 18px;
+}
+
+.add-expense-day span {
+  color: #9ca3af;
+  font-size: 14px;
+}
+
+.add-expense-page .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 22px;
+}
+
+.add-expense-page .form-group label {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.add-expense-page input,
+.add-expense-page select,
+.add-expense-page textarea {
+  border: none;
+  border-radius: 12px;
+  background: #ececec;
+  font-size: 15px;
+  padding: 14px;
+  outline: none;
+}
+
+.add-expense-page textarea {
+  min-height: 90px;
+  resize: none;
+}
+
+.scope-toggle {
+  display: flex;
+  gap: 12px;
+}
+
+.scope-btn {
+  flex: 1;
+  padding: 12px 0;
+  border: none;
+  border-radius: 12px;
+  background: #ececec;
+  color: #6b7280;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.scope-btn.active.personal {
+  background: #2563eb;
+  color: white;
+}
+
+.scope-btn.active.shared {
+  background: #f43f5e;
+  color: white;
+}
+
+.add-expense-page .primary-btn {
+  display: block;
+  width: 160px;
+  margin: 36px auto 0;
+  height: 48px;
+  border: none;
+  border-radius: 12px;
+  background: #c7d7fe;
+  color: #2563eb;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.add-expense-page .primary-btn:disabled {
+  opacity: 0.6;
+}
