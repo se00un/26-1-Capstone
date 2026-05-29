@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { createExpense } from "../api/expenseAPI";
 import { CATEGORIES } from "../constants/categories";
+import { digitsOnly, formatNumberInput } from "../utils/money";
 import "./AddExpensePage.css";
 
 export default function AddExpensePage() {
@@ -78,9 +79,10 @@ export default function AddExpensePage() {
         <div className="form-group">
           <label>금액</label>
           <input
-            type="number"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
+            type="text"
+            inputMode="numeric"
+            value={formatNumberInput(amount)}
+            onChange={(e) => setAmount(digitsOnly(e.target.value))}
           />
         </div>
 

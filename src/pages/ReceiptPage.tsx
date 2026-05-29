@@ -6,6 +6,7 @@ import {
   confirmReceipt,
 } from "../api/receiptAPI";
 import { CATEGORIES } from "../constants/categories";
+import { digitsOnly, formatNumberInput } from "../utils/money";
 import "./AddExpensePage.css";
 import "./ReceiptPage.css";
 
@@ -139,9 +140,10 @@ export default function ReceiptPage() {
             <label>금액</label>
             <div className="receipt-amount-row">
               <input
-                type="number"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
+                type="text"
+                inputMode="numeric"
+                value={formatNumberInput(amount)}
+                onChange={(e) => setAmount(digitsOnly(e.target.value))}
               />
               <input
                 className="receipt-currency"

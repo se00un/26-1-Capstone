@@ -6,6 +6,7 @@ import {
   upsertBudgets,
 } from "../api/budgetAPI";
 import { CATEGORIES, CATEGORY_DANGER_THRESHOLD } from "../constants/categories";
+import { formatMoney, formatNumberInput, digitsOnly } from "../utils/money";
 import "./BudgetPage.css";
 import "./BudgetManagePage.css";
 
@@ -22,8 +23,7 @@ type Summary = {
   category_stats: Record<string, CategoryStat>;
 };
 
-const won = (n: number) => Math.round(n).toLocaleString("ko-KR");
-const toNum = (s?: string) => Number(String(s ?? "").replace(/[^0-9]/g, "")) || 0;
+const toNum = (s?: string) => Number(digitsOnly(String(s ?? ""))) || 0;
 
 // SVG 도넛 (사용률 링)
 function Donut({
@@ -194,7 +194,7 @@ export default function BudgetManagePage() {
                       <span className={`bm-percent ${danger ? "danger" : ""}`}>
                         {percent.toFixed(1).replace(/\.0$/, "")} %
                       </span>
-                      <span className="bm-remain">잔여 {won(remaining)}</span>
+                      <span className="bm-remain">잔여 {formatMoney(remaining)}</span>
                     </div>
                   </div>
                 );
@@ -228,8 +228,8 @@ export default function BudgetManagePage() {
                   type="text"
                   inputMode="numeric"
                   placeholder="0"
-                  value={inputs[TOTAL_KEY] ?? ""}
-                  onChange={(e) => setField(TOTAL_KEY, e.target.value)}
+                  value={formatNumberInput(inputs[TOTAL_KEY] ?? "")}
+                  onChange={(e) => setField(TOTAL_KEY, digitsOnly(e.target.value))}
                 />
               </div>
 
@@ -240,8 +240,8 @@ export default function BudgetManagePage() {
                     type="text"
                     inputMode="numeric"
                     placeholder="0"
-                    value={inputs[c.key] ?? ""}
-                    onChange={(e) => setField(c.key, e.target.value)}
+                    value={formatNumberInput(inputs[c.key] ?? "")}
+                    onChange={(e) => setField(c.key, digitsOnly(e.target.value))}
                   />
                 </div>
               ))}

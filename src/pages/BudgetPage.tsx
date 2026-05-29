@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { getMyTrips } from "../api/tripAPI";
 import { getExpenses } from "../api/expenseAPI";
 import { CATEGORY_ICON } from "../constants/categories";
+import { formatMoney } from "../utils/money";
 import "./BudgetPage.css";
 
 type TripDay = {
@@ -35,8 +36,6 @@ const createTripDays = (startDate: string, endDate: string): TripDay[] => {
   }
   return days;
 };
-
-const won = (n: number) => Math.round(n).toLocaleString("ko-KR");
 
 export default function BudgetPage() {
   const navigate = useNavigate();
@@ -176,7 +175,7 @@ export default function BudgetPage() {
                         </span>
                         <span className="expense-right">
                           <span className="expense-amount">
-                            -{won(Number(e.amount_krw ?? e.amount_original ?? 0))}
+                            -{formatMoney(Number(e.amount_krw ?? e.amount_original ?? 0))}
                           </span>
                           {e.memo && (
                             <span className="expense-memo">{e.memo}</span>

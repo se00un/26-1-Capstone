@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getExpenses } from "../api/expenseAPI";
+import { formatMoney } from "../utils/money";
 import "./SettlementPage.css";
 
 // 정산 화면 (틀)
@@ -9,8 +10,6 @@ import "./SettlementPage.css";
 // TODO(api): GET /api/trips/{tripId}/members (멤버 user_id/닉네임) 추가되면
 //   - 아래 members 를 실제 목록으로 교체
 //   - POST /api/expenses/{expenseId}/split { user_ids } 로 분할 저장
-const won = (n: number) => Math.round(n).toLocaleString("ko-KR");
-
 export default function SettlementPage() {
   const navigate = useNavigate();
   const { tripId } = useParams();
@@ -89,12 +88,12 @@ export default function SettlementPage() {
             {selectedExpenses.map((e) => (
               <div className="settle-result-row" key={e.id}>
                 <span>{e.title}</span>
-                <span>{won(Number(e.amount_krw ?? e.amount_original ?? 0))}</span>
+                <span>{formatMoney(Number(e.amount_krw ?? e.amount_original ?? 0))}</span>
               </div>
             ))}
             <div className="settle-result-row total">
               <span>합계</span>
-              <span className="settle-total">{won(total)}</span>
+              <span className="settle-total">{formatMoney(total)}</span>
             </div>
           </div>
 
@@ -108,7 +107,7 @@ export default function SettlementPage() {
                 <div className="settle-member-row" key={m.id}>
                   <span className="settle-avatar">👤</span>
                   <span className="settle-member-name">{m.nickname}</span>
-                  <span>{won(total / members.length)}</span>
+                  <span>{formatMoney(total / members.length)}</span>
                 </div>
               ))
             )}
@@ -156,7 +155,7 @@ export default function SettlementPage() {
                 <span className="settle-item-date">{e.expense_date}</span>
               </span>
               <span className="settle-item-amount">
-                {won(Number(e.amount_krw ?? e.amount_original ?? 0))}
+                {formatMoney(Number(e.amount_krw ?? e.amount_original ?? 0))}
               </span>
             </button>
           ))}
