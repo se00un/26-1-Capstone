@@ -174,8 +174,13 @@ export default function BudgetPage() {
                         <span className="expense-title">
                           {e.title} {CATEGORY_ICON[e.category] ?? ""}
                         </span>
-                        <span className="expense-amount">
-                          -{won(Number(e.amount_krw ?? e.amount_original ?? 0))}
+                        <span className="expense-right">
+                          <span className="expense-amount">
+                            -{won(Number(e.amount_krw ?? e.amount_original ?? 0))}
+                          </span>
+                          {e.memo && (
+                            <span className="expense-memo">{e.memo}</span>
+                          )}
                         </span>
                       </button>
                     ))}
