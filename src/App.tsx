@@ -7,6 +7,7 @@ import FriendsPage from "./pages/FriendsPage";
 import BudgetPage from "./pages/BudgetPage";
 import BudgetManagePage from "./pages/BudgetManagePage";
 import AddExpensePage from "./pages/AddExpensePage";
+import ExpenseDetailPage from "./pages/ExpenseDetailPage";
 import ReceiptPage from "./pages/ReceiptPage";
 import SettlementPage from "./pages/SettlementPage";
 import LoginPage from "./pages/LoginPage";
@@ -67,6 +68,12 @@ function App() {
         <Route
           path="/trips/:tripId/budget/expense/new"
           element={user ? <AddExpensePage /> : <Navigate to="/login" />}
+        />
+
+        {/* 지출 세부보기 (수정/삭제) */}
+        <Route
+          path="/trips/:tripId/budget/expense/:expenseId"
+          element={user ? <ExpenseDetailPage /> : <Navigate to="/login" />}
         />
 
         {/* 영수증 인식 (틀) */}

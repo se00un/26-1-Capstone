@@ -154,7 +154,16 @@ export default function BudgetPage() {
                 {dayExpenses.length > 0 && (
                   <div className="budget-expense-list">
                     {dayExpenses.map((e, idx) => (
-                      <div className="budget-expense-item" key={e.id}>
+                      <button
+                        type="button"
+                        className="budget-expense-item"
+                        key={e.id}
+                        onClick={() =>
+                          navigate(
+                            `/trips/${tripId}/budget/expense/${e.id}`
+                          )
+                        }
+                      >
                         <span
                           className={`expense-badge ${
                             e.expense_type === "shared" ? "shared" : "personal"
@@ -168,7 +177,7 @@ export default function BudgetPage() {
                         <span className="expense-amount">
                           -{won(Number(e.amount_krw ?? e.amount_original ?? 0))}
                         </span>
-                      </div>
+                      </button>
                     ))}
                   </div>
                 )}
