@@ -1,5 +1,5 @@
 import { getMyTrips, deleteTrip } from "../api/tripAPI";
-import { createRoute, getRoutesByTripId } from "../api/routeAPI";
+import { getRoutesByTripId } from "../api/routeAPI";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import GlobeSection from "../components/GlobeSection";
