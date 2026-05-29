@@ -154,6 +154,11 @@
   font-size: 15px;
 }
 
+.budget-input-row input[readonly] {
+  background: #e2e8f0;
+  color: #64748b;
+}
+
 .budget-complete-btn {
   width: 140px;
   display: block;

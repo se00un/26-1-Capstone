@@ -12,6 +12,8 @@ import "./BudgetManagePage.css";
 
 // "총예산"은 카테고리와 별개로 사용자가 직접 입력하는 전체 예산 행
 const TOTAL_KEY = "총예산";
+// "기타"는 입력하지 않고 (총예산 - 나머지 카테고리)로 자동 계산
+const ETC_KEY = "기타";
 
 type CategoryStat = { budget: number; expense: number };
 
@@ -104,14 +106,30 @@ export default function BudgetManagePage() {
   const setField = (key: string, value: string) =>
     setInputs((prev) => ({ ...prev, [key]: value }));
 
+  // 직접 입력하는 카테고리 (기타 제외)
+  const editableCategoryKeys = CATEGORIES.filter(
+    (c) => c.key !== ETC_KEY
+  ).map((c) => c.key);
+
+  // 기타 = 총예산 - (교통+숙소+음식+관광+쇼핑), 음수면 0
+  const computedEtc = Math.max(
+    0,
+    toNum(inputs[TOTAL_KEY]) -
+      editableCategoryKeys.reduce((s, k) => s + toNum(inputs[k]), 0)
+  );
+
   const handleSave = async () => {
     if (!tripId) return;
 
-    // 총예산 + 6개 카테고리 모두 저장 (값이 있는 것만)
-    const keys = [TOTAL_KEY, ...CATEGORIES.map((c) => c.key)];
-    const budgets = keys
-      .map((key) => ({ category: key, amount: toNum(inputs[key]) }))
-      .filter((b) => b.amount > 0);
+    // 총예산 + 직접입력 카테고리 + 자동계산된 기타 (값이 있는 것만)
+    const budgets = [
+      { category: TOTAL_KEY, amount: toNum(inputs[TOTAL_KEY]) },
+      ...editableCategoryKeys.map((k) => ({
+        category: k,
+        amount: toNum(inputs[k]),
+      })),
+      { category: ETC_KEY, amount: computedEtc },
+    ].filter((b) => b.amount > 0);
 
     try {
       await upsertBudgets(tripId, budgets);
@@ -233,18 +251,30 @@ export default function BudgetManagePage() {
                 />
               </div>
 
-              {CATEGORIES.map((c) => (
-                <div className="budget-input-row" key={c.key}>
-                  <label>{c.key}</label>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    placeholder="0"
-                    value={formatNumberInput(inputs[c.key] ?? "")}
-                    onChange={(e) => setField(c.key, digitsOnly(e.target.value))}
-                  />
-                </div>
-              ))}
+              {CATEGORIES.map((c) =>
+                c.key === ETC_KEY ? (
+                  <div className="budget-input-row" key={c.key}>
+                    <label>{c.key}</label>
+                    <input
+                      type="text"
+                      readOnly
+                      title="총예산 - 나머지 카테고리로 자동 계산됩니다"
+                      value={formatNumberInput(String(computedEtc))}
+                    />
+                  </div>
+                ) : (
+                  <div className="budget-input-row" key={c.key}>
+                    <label>{c.key}</label>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      placeholder="0"
+                      value={formatNumberInput(inputs[c.key] ?? "")}
+                      onChange={(e) => setField(c.key, digitsOnly(e.target.value))}
+                    />
+                  </div>
+                )
+              )}
 
               <button className="budget-complete-btn" onClick={handleSave}>
                 설정 완료
