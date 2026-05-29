@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   getBudgets,
@@ -8,6 +8,9 @@ import {
 import { CATEGORIES, CATEGORY_DANGER_THRESHOLD } from "../constants/categories";
 import "./BudgetPage.css";
 import "./BudgetManagePage.css";
+
+// "총예산"은 카테고리와 별개로 사용자가 직접 입력하는 전체 예산 행
+const TOTAL_KEY = "총예산";
 
 type CategoryStat = { budget: number; expense: number };
 
@@ -20,6 +23,7 @@ type Summary = {
 };
 
 const won = (n: number) => Math.round(n).toLocaleString("ko-KR");
+const toNum = (s?: string) => Number(String(s ?? "").replace(/[^0-9]/g, "")) || 0;
 
 // SVG 도넛 (사용률 링)
 function Donut({
@@ -80,7 +84,7 @@ export default function BudgetManagePage() {
       setHasBudget(budgets.length > 0);
       setSummary(summaryRes);
 
-      // 모달 초기값을 기존 예산으로 채움
+      // 모달 초기값을 기존 예산으로 채움 (총예산 행 포함)
       const prefill: Record<string, string> = {};
       for (const b of budgets) {
         prefill[b.category] = String(Math.round(Number(b.amount)));
@@ -97,22 +101,17 @@ export default function BudgetManagePage() {
     load();
   }, [tripId]);
 
-  // #2: 총 예산은 카테고리 합으로 자동 계산 (하드코딩/별도 저장 X)
-  const totalInput = useMemo(
-    () =>
-      CATEGORIES.reduce(
-        (sum, c) => sum + (Number(inputs[c.key]) || 0),
-        0
-      ),
-    [inputs]
-  );
+  const setField = (key: string, value: string) =>
+    setInputs((prev) => ({ ...prev, [key]: value }));
 
   const handleSave = async () => {
     if (!tripId) return;
-    const budgets = CATEGORIES.map((c) => ({
-      category: c.key,
-      amount: Number(inputs[c.key]) || 0,
-    })).filter((b) => b.amount > 0);
+
+    // 총예산 + 6개 카테고리 모두 저장 (값이 있는 것만)
+    const keys = [TOTAL_KEY, ...CATEGORIES.map((c) => c.key)];
+    const budgets = keys
+      .map((key) => ({ category: key, amount: toNum(inputs[key]) }))
+      .filter((b) => b.amount > 0);
 
     try {
       await upsertBudgets(tripId, budgets);
@@ -125,11 +124,15 @@ export default function BudgetManagePage() {
     }
   };
 
-  const totalBudget = summary?.total_budget_krw ?? 0;
+  // 진행바 총액: "총예산" 행을 우선 사용 (없으면 전체 합으로 폴백)
+  const totalBudget =
+    summary?.category_stats?.[TOTAL_KEY]?.budget ??
+    summary?.total_budget_krw ??
+    0;
   const totalExpense = summary?.total_expense_krw ?? 0;
   const usedPercent = totalBudget > 0 ? (totalExpense / totalBudget) * 100 : 0;
-  const barDanger = summary?.risk_status === "danger";
-  const barWarning = summary?.risk_status === "warning";
+  const barDanger = usedPercent >= 100;
+  const barWarning = !barDanger && usedPercent >= CATEGORY_DANGER_THRESHOLD;
 
   return (
     <div className="app-container">
@@ -144,7 +147,6 @@ export default function BudgetManagePage() {
         {loading ? (
           <p className="bm-empty-text">불러오는 중...</p>
         ) : !hasBudget ? (
-          // 빈 상태
           <div className="bm-empty">
             <button
               className="budget-setting-btn"
@@ -188,9 +190,7 @@ export default function BudgetManagePage() {
                   <div className="bm-cell" key={c.key}>
                     <Donut label={c.key} percent={percent} danger={danger} />
                     <div className="bm-cell-meta">
-                      <span
-                        className={`bm-dot ${danger ? "danger" : ""}`}
-                      />
+                      <span className={`bm-dot ${danger ? "danger" : ""}`} />
                       <span className={`bm-percent ${danger ? "danger" : ""}`}>
                         {percent.toFixed(1).replace(/\.0$/, "")} %
                       </span>
@@ -224,18 +224,24 @@ export default function BudgetManagePage() {
 
               <div className="budget-input-row">
                 <label>총 예산</label>
-                <input type="text" value={won(totalInput)} readOnly />
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  placeholder="0"
+                  value={inputs[TOTAL_KEY] ?? ""}
+                  onChange={(e) => setField(TOTAL_KEY, e.target.value)}
+                />
               </div>
 
               {CATEGORIES.map((c) => (
                 <div className="budget-input-row" key={c.key}>
                   <label>{c.key}</label>
                   <input
-                    type="number"
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="0"
                     value={inputs[c.key] ?? ""}
-                    onChange={(e) =>
-                      setInputs((prev) => ({ ...prev, [c.key]: e.target.value }))
-                    }
+                    onChange={(e) => setField(c.key, e.target.value)}
                   />
                 </div>
               ))}
