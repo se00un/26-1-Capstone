@@ -79,3 +79,31 @@
   text-decoration: underline;
   cursor: pointer;
 }
+
+.receipt-dropzone:disabled {
+  opacity: 0.7;
+}
+
+/* 검수(프리필) 화면 */
+.receipt-review-img {
+  display: block;
+  width: 60%;
+  max-height: 220px;
+  object-fit: contain;
+  margin: 0 auto 20px;
+  border-radius: 8px;
+}
+
+.receipt-amount-row {
+  display: flex;
+  gap: 10px;
+}
+
+.receipt-amount-row input[type="number"] {
+  flex: 1;
+}
+
+.receipt-currency {
+  width: 80px;
+  text-align: center;
+}
