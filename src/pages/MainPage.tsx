@@ -99,7 +99,9 @@ export default function MainPage() {
       <div className="main-page">
         <header className="main-header">
           <h1 className="logo">TripLog</h1>
-          <button className="profile-btn">👤</button>
+          <button className="profile-btn" onClick={() => navigate("/profile")}>
+            👤
+          </button>
         </header>
         <section className="globe-card">
           <GlobeSection trips={tripPins} onPinClick={handleTripClick} />

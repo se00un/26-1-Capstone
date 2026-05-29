@@ -6,6 +6,7 @@ import AddSchedulePage from "./pages/AddSchedulePage";
 import FriendsPage from "./pages/FriendsPage";
 import BudgetPage from "./pages/BudgetPage";
 import LoginPage from "./pages/LoginPage";
+import ProfilePage from "./pages/ProfilePage";
 
 function App() {
   const user = localStorage.getItem("user");
@@ -50,6 +51,12 @@ function App() {
         <Route
           path="/trips/:tripId/budget"
           element={user ? <BudgetPage /> : <Navigate to="/login" />}
+        />
+
+        {/* 내 정보 페이지 */}
+        <Route
+          path="/profile"
+          element={user ? <ProfilePage /> : <Navigate to="/login" />}
         />
 
       </Routes>
