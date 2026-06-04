@@ -11,14 +11,22 @@
 .receipt-header {
   display: flex;
   align-items: center;
+  justify-content: center;
+  position: relative;
   gap: 12px;
   margin-bottom: 20px;
+}
+
+.receipt-header .back-btn {
+  position: absolute;
+  left: 0;
 }
 
 .receipt-header h1 {
   margin: 0;
   font-size: 24px;
   font-weight: 800;
+  text-align: center;
 }
 
 .receipt-dropzone {
@@ -84,14 +92,82 @@
   opacity: 0.7;
 }
 
+/* 인식 중 오버레이 + 스피너 */
+.receipt-processing-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.75);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  color: #2563eb;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.receipt-spinner {
+  width: 44px;
+  height: 44px;
+  border: 4px solid #c7d7fe;
+  border-top-color: #2563eb;
+  border-radius: 50%;
+  animation: receipt-spin 0.8s linear infinite;
+}
+
+.receipt-spinner.small {
+  width: 18px;
+  height: 18px;
+  border-width: 3px;
+}
+
+@keyframes receipt-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 버튼 안 스피너 정렬 */
+.receipt-recognize-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
 /* 검수(프리필) 화면 */
+/* app-container(고정 높이 + overflow hidden) 안에서 내부 스크롤 허용 */
+.add-expense-page.receipt-review {
+  height: 100%;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+/* 타이틀 중앙 정렬 (뒤로가기 버튼은 왼쪽에 고정) */
+.receipt-review .add-expense-header {
+  position: relative;
+  justify-content: center;
+}
+
+.receipt-review .add-expense-header .back-btn {
+  position: absolute;
+  left: 0;
+}
+
+.receipt-review .add-expense-header h1 {
+  flex: none;
+  text-align: center;
+}
+
 .receipt-review-img {
   display: block;
-  width: 60%;
-  max-height: 220px;
+  width: 100%;
+  max-height: 440px;
   object-fit: contain;
   margin: 0 auto 20px;
-  border-radius: 8px;
+  border-radius: 12px;
+  background: #ececec;
 }
 
 .receipt-amount-row {

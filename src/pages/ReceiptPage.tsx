@@ -169,7 +169,7 @@ export default function ReceiptPage() {
   if (phase === "review") {
     return (
       <div className="app-container">
-        <div className="add-expense-page">
+        <div className="add-expense-page receipt-review">
           <header className="add-expense-header">
             <button className="back-btn" onClick={() => setPhase("upload")}>
               &lt;
@@ -281,6 +281,12 @@ export default function ReceiptPage() {
           ) : (
             <span className="receipt-placeholder">＋ 이미지 업로드</span>
           )}
+          {phase === "processing" && (
+            <div className="receipt-processing-overlay">
+              <div className="receipt-spinner" />
+              <span>영수증 인식 중...</span>
+            </div>
+          )}
           <input
             ref={fileRef}
             type="file"
@@ -303,7 +309,14 @@ export default function ReceiptPage() {
           onClick={handleRecognize}
           disabled={phase === "processing"}
         >
-          {phase === "processing" ? "인식 중..." : "인식하기"}
+          {phase === "processing" ? (
+            <>
+              <span className="receipt-spinner small" />
+              인식 중...
+            </>
+          ) : (
+            "인식하기"
+          )}
         </button>
 
         <button
