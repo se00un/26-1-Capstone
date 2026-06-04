@@ -1,20 +1,26 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getExpenses } from "../api/expenseAPI";
+import { getTripMembers } from "../api/tripAPI";
 import { formatMoney } from "../utils/money";
 import "./SettlementPage.css";
 
-// 정산 화면 (틀)
-// 공동 지출 선택 + 합계까지는 실제 데이터로 동작.
-// 멤버 1/N 분할은 백엔드에 "트립 멤버 목록 API"가 없어 보류.
-// TODO(api): GET /api/trips/{tripId}/members (멤버 user_id/닉네임) 추가되면
-//   - 아래 members 를 실제 목록으로 교체
-//   - POST /api/expenses/{expenseId}/split { user_ids } 로 분할 저장
+type TripMember = {
+  user_id: number;
+  email: string;
+  nickname: string;
+  profile_image_url: string | null;
+  role: string;
+};
+
+// 정산 화면
+// 공동 지출 선택 → 합계 → 멤버 목록 API 기반 1/N 분할 표시
 export default function SettlementPage() {
   const navigate = useNavigate();
   const { tripId } = useParams();
 
   const [shared, setShared] = useState<any[]>([]);
+  const [members, setMembers] = useState<TripMember[]>([]);
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [view, setView] = useState<"select" | "result">("select");
   const [loading, setLoading] = useState(true);
@@ -23,12 +29,16 @@ export default function SettlementPage() {
     const load = async () => {
       if (!tripId) return;
       try {
-        const list = await getExpenses(tripId);
+        const [list, memberList] = await Promise.all([
+          getExpenses(tripId),
+          getTripMembers(tripId),
+        ]);
         setShared(
           (Array.isArray(list) ? list : []).filter(
             (e) => e.expense_type === "shared"
           )
         );
+        setMembers(Array.isArray(memberList) ? memberList : []);
       } catch (error) {
         console.error("정산 대상 조회 실패:", error);
       } finally {
@@ -60,8 +70,12 @@ export default function SettlementPage() {
     0
   );
 
-  // TODO(api): 멤버 목록 API 연동 전까지 분할 인원/명단을 알 수 없음
-  const members: { id: number; nickname: string }[] = [];
+  // 1/N 분할 — 백엔드 split 로직과 동일하게 반올림하고 남는 차액은 첫 멤버에게
+  const N = members.length;
+  const baseSplit = N > 0 ? Math.round(total / N) : 0;
+  const remainder = N > 0 ? total - baseSplit * N : 0;
+  const splitAmount = (index: number) =>
+    index === 0 ? baseSplit + remainder : baseSplit;
 
   if (loading) {
     return (
@@ -98,16 +112,32 @@ export default function SettlementPage() {
           </div>
 
           <div className="settle-members">
+            <div className="settle-members-label">
+              {N}명 · 1인당 {formatMoney(baseSplit)}
+            </div>
             {members.length === 0 ? (
-              <p className="settle-todo">
-                멤버별 1/N 정산은 멤버 목록 API 연동 후 표시됩니다.
-              </p>
+              <p className="settle-todo">여행 멤버를 불러오지 못했습니다.</p>
             ) : (
-              members.map((m) => (
-                <div className="settle-member-row" key={m.id}>
-                  <span className="settle-avatar">👤</span>
-                  <span className="settle-member-name">{m.nickname}</span>
-                  <span>{formatMoney(total / members.length)}</span>
+              members.map((m, i) => (
+                <div className="settle-member-row" key={m.user_id}>
+                  {m.profile_image_url ? (
+                    <img
+                      className="settle-avatar-img"
+                      src={m.profile_image_url}
+                      alt={m.nickname}
+                    />
+                  ) : (
+                    <span className="settle-avatar">👤</span>
+                  )}
+                  <span className="settle-member-name">
+                    {m.nickname}
+                    {m.role === "owner" && (
+                      <span className="settle-member-role">방장</span>
+                    )}
+                  </span>
+                  <span className="settle-member-amount">
+                    {formatMoney(splitAmount(i))}
+                  </span>
                 </div>
               ))
             )}

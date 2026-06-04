@@ -13,6 +13,19 @@ export const getMyTrips = async () => {
   return res.json();
 };
 
+// 여행 멤버 목록 조회 (참여자만 가능)
+// → [{ user_id, email, nickname, profile_image_url, role, joined_at }]
+export const getTripMembers = async (tripId: number | string) => {
+  const res = await fetch(`${API_BASE_URL}/api/trips/${tripId}/members`, {
+    headers: {
+      Authorization: `Bearer ${getAccessToken()}`,
+    },
+  });
+
+  if (!res.ok) throw new Error("여행 멤버 조회 실패");
+  return res.json();
+};
+
 export const deleteTrip = async (tripId: number | string) => {
   const res = await fetch(`${API_BASE_URL}/api/trips/${tripId}`, {
     method: "DELETE",
