@@ -4,6 +4,11 @@ import { getMyTrips } from "../api/tripAPI";
 import { getExpenses } from "../api/expenseAPI";
 import { CATEGORY_ICON } from "../constants/categories";
 import { formatMoney } from "../utils/money";
+import {
+  getCurrencyForCountry,
+  fetchKrwRate,
+  formatCurrency,
+} from "../utils/currency";
 import "./BudgetPage.css";
 
 type TripDay = {
@@ -46,6 +51,10 @@ export default function BudgetPage() {
   const [expenses, setExpenses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // 여행 국가의 현지 통화 + KRW→현지 환율 (조회 실패 시 KRW 표시 유지)
+  const [localCurrency, setLocalCurrency] = useState("KRW");
+  const [krwRate, setKrwRate] = useState<number | null>(null);
+
   const load = async () => {
     if (!tripId) return;
     try {
@@ -54,6 +63,16 @@ export default function BudgetPage() {
       setTrip(found ?? null);
       if (found) {
         setDays(createTripDays(found.start_date, found.end_date));
+
+        // 국가명 → 통화 → 환율 (실패해도 화면은 KRW로 정상 동작)
+        const currency = await getCurrencyForCountry(found.country);
+        if (currency !== "KRW") {
+          const rate = await fetchKrwRate(currency);
+          if (rate) {
+            setLocalCurrency(currency);
+            setKrwRate(rate);
+          }
+        }
       }
 
       const expenseList = await getExpenses(tripId);
@@ -71,6 +90,17 @@ export default function BudgetPage() {
 
   const expensesByDay = (iso: string) =>
     expenses.filter((e) => String(e.expense_date).slice(0, 10) === iso);
+
+  // 지출 금액을 현지 통화로 표시.
+  // 원래 현지 통화로 쓴 지출이면 원금액 그대로(정확), KRW 등 다른 통화면 환율로 환산
+  const displayAmount = (e: any): string => {
+    const krw = Number(e.amount_krw ?? e.amount_original ?? 0);
+    if (localCurrency === "KRW" || !krwRate) return formatMoney(krw);
+    if (e.currency === localCurrency) {
+      return formatCurrency(Number(e.amount_original ?? 0), localCurrency);
+    }
+    return formatCurrency(krw * krwRate, localCurrency);
+  };
 
   if (loading) {
     return (
@@ -175,7 +205,7 @@ export default function BudgetPage() {
                         </span>
                         <span className="expense-right">
                           <span className="expense-amount">
-                            -{formatMoney(Number(e.amount_krw ?? e.amount_original ?? 0))}
+                            -{displayAmount(e)}
                           </span>
                           {e.memo && (
                             <span className="expense-memo">{e.memo}</span>

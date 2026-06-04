@@ -1,21 +1,64 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { createInvite } from "../api/inviteAPI";
+import { getTripMembers } from "../api/tripAPI";
+import { getExpenses } from "../api/expenseAPI";
+import { formatMoney } from "../utils/money";
 import "./FriendsPage.css";
 
 type Member = {
-  id: number;
-  name: string;
-  role: "owner" | "editor";
+  user_id: number;
+  nickname: string;
+  profile_image_url: string | null;
+  role: string;
 };
 
 export default function FriendsPage() {
   const navigate = useNavigate();
   const { tripId } = useParams();
 
-  const [members] = useState<Member[]>([
-    { id: 1, name: "닉네임", role: "owner" },
-  ]);
+  const [members, setMembers] = useState<Member[]>([]);
+  const [sharedExpenses, setSharedExpenses] = useState<any[]>([]);
+
+  useEffect(() => {
+    const load = async () => {
+      if (!tripId) return;
+      try {
+        const [memberList, expenseList] = await Promise.all([
+          getTripMembers(tripId),
+          getExpenses(tripId),
+        ]);
+        setMembers(Array.isArray(memberList) ? memberList : []);
+        setSharedExpenses(
+          (Array.isArray(expenseList) ? expenseList : []).filter(
+            (e) => e.expense_type === "shared"
+          )
+        );
+      } catch (error) {
+        console.error("친구 목록/정산 조회 실패:", error);
+      }
+    };
+    load();
+  }, [tripId]);
+
+  // 최종 정산 (한화 기준, SettlementPage와 동일한 1/N 분할 로직)
+  // 부담액 = 공동지출 합계 / N (반올림 차액은 첫 멤버), 선지불 = 본인이 결제한 공동지출 합
+  // 정산액 = 부담액 - 선지불 (양수: 내야 함 / 음수: 돌려받음)
+  const N = members.length;
+  const totalShared = sharedExpenses.reduce(
+    (sum, e) => sum + Number(e.amount_krw ?? e.amount_original ?? 0),
+    0
+  );
+  const baseSplit = N > 0 ? Math.round(totalShared / N) : 0;
+  const remainder = N > 0 ? totalShared - baseSplit * N : 0;
+
+  const settlementOf = (member: Member, index: number): number => {
+    const share = index === 0 ? baseSplit + remainder : baseSplit;
+    const paid = sharedExpenses
+      .filter((e) => e.created_by === member.user_id)
+      .reduce((sum, e) => sum + Number(e.amount_krw ?? e.amount_original ?? 0), 0);
+    return share - paid;
+  };
 
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [createdInviteCode, setCreatedInviteCode] = useState("");
@@ -52,18 +95,40 @@ export default function FriendsPage() {
         </header>
 
         <div className="friends-list">
-          {members.map((member) => (
-            <div className="friend-item" key={member.id}>
-              <div className="friend-left">
-                <div className="avatar">👤</div>
-                <span className="friend-name">{member.name}</span>
-              </div>
+          {members.map((member, i) => {
+            const settle = settlementOf(member, i);
+            return (
+              <div className="friend-item" key={member.user_id}>
+                <div className="friend-left">
+                  {member.profile_image_url ? (
+                    <img
+                      className="avatar-img"
+                      src={member.profile_image_url}
+                      alt={member.nickname}
+                    />
+                  ) : (
+                    <div className="avatar">👤</div>
+                  )}
+                  <span className="friend-name">{member.nickname}</span>
+                  <span className={`role-badge ${member.role}`}>
+                    {member.role}
+                  </span>
+                </div>
 
-              <span className={`role-badge ${member.role}`}>
-                {member.role}
-              </span>
-            </div>
-          ))}
+                <span
+                  className={`friend-settle ${
+                    settle > 0 ? "owe" : settle < 0 ? "receive" : ""
+                  }`}
+                >
+                  {settle > 0
+                    ? `₩${formatMoney(settle)} 내기`
+                    : settle < 0
+                    ? `₩${formatMoney(-settle)} 받기`
+                    : "정산 완료"}
+                </span>
+              </div>
+            );
+          })}
 
           <button
             type="button"

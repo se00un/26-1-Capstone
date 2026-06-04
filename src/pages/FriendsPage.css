@@ -60,9 +60,33 @@
   font-size: 20px;
 }
 
+.avatar-img {
+  width: 42px;
+  height: 42px;
+  border: 2px solid #555;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
 .friend-name {
   font-size: 16px;
   font-weight: 600;
+}
+
+/* 최종 정산 금액 (한화) — 내야 하면 빨강, 받으면 파랑 */
+.friend-settle {
+  font-size: 15px;
+  font-weight: 700;
+  color: #9ca3af;
+  white-space: nowrap;
+}
+
+.friend-settle.owe {
+  color: #ef4444;
+}
+
+.friend-settle.receive {
+  color: #2563eb;
 }
 
 .role-badge {
