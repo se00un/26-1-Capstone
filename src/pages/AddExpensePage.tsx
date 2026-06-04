@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { createExpense } from "../api/expenseAPI";
-import { CATEGORIES } from "../constants/categories";
+import CategorySelect from "../components/CategorySelect";
 import { digitsOnly, formatNumberInput } from "../utils/money";
 import "./AddExpensePage.css";
 
@@ -115,14 +115,7 @@ export default function AddExpensePage() {
 
         <div className="form-group">
           <label>카테고리</label>
-          <select value={category} onChange={(e) => setCategory(e.target.value)}>
-            <option value="">선택</option>
-            {CATEGORIES.map((c) => (
-              <option key={c.key} value={c.key}>
-                {c.icon} {c.key}
-              </option>
-            ))}
-          </select>
+          <CategorySelect value={category} onChange={setCategory} />
         </div>
 
         <div className="form-group">

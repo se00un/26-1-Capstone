@@ -1,9 +1,11 @@
 .add-expense-page {
   width: 100%;
-  min-height: 100%;
+  height: 100%;
   padding: 24px 20px 40px;
   box-sizing: border-box;
   background: #f8f8f8;
+  /* 드롭다운 등으로 콘텐츠가 폰 프레임보다 길어지면 내부 스크롤 활성화 */
+  overflow-y: auto;
 }
 
 .add-expense-header {

@@ -1,0 +1,73 @@
+.category-select {
+  position: relative;
+}
+
+/* 기존 입력칸(#ececec, radius 12) 톤에 맞춘 트리거 버튼 */
+.category-select-trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: none;
+  border-radius: 12px;
+  background: #ececec;
+  font-size: 16px;
+  padding: 14px;
+  cursor: pointer;
+  color: #111827;
+  text-align: left;
+}
+
+.category-select-trigger .placeholder {
+  color: #9ca3af;
+}
+
+.category-select-trigger .chevron {
+  color: #6b7280;
+  transition: transform 0.15s;
+}
+
+.category-select-trigger .chevron.up {
+  transform: rotate(180deg);
+}
+
+/* 트리거 바로 아래에 붙는 옵션 목록 */
+.category-select-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
+  z-index: 100;
+}
+
+.category-select-menu button {
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: transparent;
+  font-size: 17px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #111827;
+}
+
+.category-select-menu button:hover {
+  background: #f1f3f6;
+}
+
+.category-select-menu button.active {
+  background: #dbeafe;
+  color: #2563eb;
+  font-weight: 700;
+}
+
+.category-select-menu button.muted {
+  color: #9ca3af;
+}
