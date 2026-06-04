@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getExpenses, updateExpense, deleteExpense } from "../api/expenseAPI";
 import { CATEGORIES } from "../constants/categories";
+import CurrencySelect from "../components/CurrencySelect";
 import { digitsOnly, formatNumberInput } from "../utils/money";
 import "./AddExpensePage.css";
 import "./ExpenseDetailPage.css";
@@ -25,6 +26,7 @@ export default function ExpenseDetailPage() {
   const [expenseDate, setExpenseDate] = useState("");
 
   const [amount, setAmount] = useState("");
+  const [currency, setCurrency] = useState("KRW");
   const [title, setTitle] = useState("");
   const [scope, setScope] = useState<"personal" | "shared">("personal");
   const [category, setCategory] = useState("");
@@ -46,6 +48,7 @@ export default function ExpenseDetailPage() {
         setCreatedBy(found.created_by ?? null);
         setExpenseDate(String(found.expense_date).slice(0, 10));
         setAmount(String(Math.round(Number(found.amount_original ?? 0))));
+        setCurrency(String(found.currency || "KRW").toUpperCase());
         setTitle(found.title ?? "");
         setScope(found.expense_type === "shared" ? "shared" : "personal");
         setCategory(found.category ?? "");
@@ -77,6 +80,7 @@ export default function ExpenseDetailPage() {
       await updateExpense(expenseId, {
         title: title.trim(),
         amount_original: Number(amount),
+        currency,
         expense_type: scope,
         category: category || undefined,
         memo: memo || undefined,
@@ -154,13 +158,20 @@ export default function ExpenseDetailPage() {
 
         <div className="form-group">
           <label>금액</label>
-          <input
-            type="text"
-            inputMode="numeric"
-            value={formatNumberInput(amount)}
-            onChange={(e) => setAmount(digitsOnly(e.target.value))}
-            disabled={!isOwner}
-          />
+          <div className="amount-currency-row">
+            <input
+              type="text"
+              inputMode="numeric"
+              value={formatNumberInput(amount)}
+              onChange={(e) => setAmount(digitsOnly(e.target.value))}
+              disabled={!isOwner}
+            />
+            <CurrencySelect
+              value={currency}
+              onChange={setCurrency}
+              disabled={!isOwner}
+            />
+          </div>
         </div>
 
         <div className="form-group">

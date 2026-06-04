@@ -6,6 +6,7 @@ import {
   upsertBudgets,
 } from "../api/budgetAPI";
 import { CATEGORIES, CATEGORY_DANGER_THRESHOLD } from "../constants/categories";
+import CurrencySelect from "../components/CurrencySelect";
 import { formatMoney, formatNumberInput, digitsOnly } from "../utils/money";
 import "./BudgetPage.css";
 import "./BudgetManagePage.css";
@@ -73,6 +74,10 @@ export default function BudgetManagePage() {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [inputs, setInputs] = useState<Record<string, string>>({});
+  // 예산 입력 통화 (기본: 예산 페이지 표시 통화 → 없으면 KRW)
+  const [budgetCurrency, setBudgetCurrency] = useState(
+    () => localStorage.getItem(`tripCurrency:${tripId}`) ?? "KRW"
+  );
 
   const load = async () => {
     if (!tripId) return;
@@ -92,6 +97,12 @@ export default function BudgetManagePage() {
         prefill[b.category] = String(Math.round(Number(b.amount)));
       }
       setInputs(prefill);
+
+      // 기존 예산에 저장된 통화가 있으면 그걸 사용
+      const savedCurrency = budgets.find((b: any) => b.currency)?.currency;
+      if (savedCurrency) {
+        setBudgetCurrency(String(savedCurrency).toUpperCase());
+      }
     } catch (error) {
       console.error("예산 조회 실패:", error);
     } finally {
@@ -129,7 +140,9 @@ export default function BudgetManagePage() {
         amount: toNum(inputs[k]),
       })),
       { category: ETC_KEY, amount: computedEtc },
-    ].filter((b) => b.amount > 0);
+    ]
+      .filter((b) => b.amount > 0)
+      .map((b) => ({ ...b, currency: budgetCurrency }));
 
     try {
       await upsertBudgets(tripId, budgets);
@@ -239,6 +252,15 @@ export default function BudgetManagePage() {
                 ✕
               </button>
               <h2>예산 설정</h2>
+
+              {/* 예산 입력 통화 (모든 카테고리에 일괄 적용) */}
+              <div className="budget-input-row">
+                <label>통화</label>
+                <CurrencySelect
+                  value={budgetCurrency}
+                  onChange={setBudgetCurrency}
+                />
+              </div>
 
               <div className="budget-input-row">
                 <label>총 예산</label>

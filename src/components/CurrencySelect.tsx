@@ -5,6 +5,7 @@ import "./CurrencySelect.css";
 type Props = {
   value: string;
   onChange: (code: string) => void;
+  disabled?: boolean;
 };
 
 // 통화 목록/한글 이름은 전부 브라우저 내장 Intl에서 — 하드코딩 없음
@@ -12,7 +13,7 @@ const CURRENCY_CODES: string[] = Intl.supportedValuesOf("currency");
 const KO_NAME = new Intl.DisplayNames(["ko"], { type: "currency" });
 
 // 검색 가능한 통화 선택 드롭다운 (예산 화면 상단)
-export default function CurrencySelect({ value, onChange }: Props) {
+export default function CurrencySelect({ value, onChange, disabled }: Props) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const rootRef = useRef<HTMLDivElement | null>(null);
@@ -75,6 +76,7 @@ export default function CurrencySelect({ value, onChange }: Props) {
         type="button"
         className="currency-select-trigger"
         onClick={() => setOpen((o) => !o)}
+        disabled={disabled}
       >
         <span className="currency-symbol">{selected?.symbol ?? value}</span>
         <span className="currency-code">{value}</span>

@@ -17,6 +17,11 @@
   cursor: pointer;
 }
 
+.currency-select-trigger:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
 .currency-select-trigger .chevron {
   color: #6b7280;
   transition: transform 0.15s;
