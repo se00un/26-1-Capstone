@@ -1,13 +1,15 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import {
-  getBudgets,
-  getBudgetSummary,
-  upsertBudgets,
-} from "../api/budgetAPI";
+import { getBudgets, upsertBudgets } from "../api/budgetAPI";
+import { getExpenses } from "../api/expenseAPI";
 import { CATEGORIES, CATEGORY_DANGER_THRESHOLD } from "../constants/categories";
 import CurrencySelect from "../components/CurrencySelect";
 import { formatMoney, formatNumberInput, digitsOnly } from "../utils/money";
+import {
+  getKrwRateTable,
+  budgetToKrw,
+  expenseToKrw,
+} from "../utils/currency";
 import "./BudgetPage.css";
 import "./BudgetManagePage.css";
 
@@ -21,12 +23,58 @@ type CategoryStat = { budget: number; expense: number };
 type Summary = {
   total_budget_krw: number;
   total_expense_krw: number;
-  burn_rate: number;
-  risk_status: "safe" | "warning" | "danger";
   category_stats: Record<string, CategoryStat>;
 };
 
 const toNum = (s?: string) => Number(digitsOnly(String(s ?? ""))) || 0;
+
+const getMyId = (): number | null => {
+  try {
+    const u = JSON.parse(localStorage.getItem("user") || "null");
+    return u?.id ?? null;
+  } catch {
+    return null;
+  }
+};
+
+// 예산/지출 통계를 프론트에서 직접 계산 (전부 보정된 KRW 기준).
+// 백엔드 /summary는 환율 fallback(1.0)으로 오염된 amount_krw를 그대로 합산해서
+// 통화가 섞이면 예산↔지출 스케일이 안 맞는 문제가 있음 → 클라이언트 보정 계산으로 대체
+const computeSummary = (
+  budgets: any[],
+  expenses: any[],
+  table: Record<string, number> | null
+): Summary => {
+  const myId = getMyId();
+  // 백엔드 summary와 동일한 범위: shared + 본인 personal
+  const filtered = expenses.filter(
+    (e) =>
+      e.expense_type === "shared" ||
+      (e.expense_type === "personal" && e.created_by === myId)
+  );
+
+  const stats: Record<string, CategoryStat> = {};
+  for (const b of budgets) {
+    const cat = b.category;
+    const val = budgetToKrw(b, table);
+    stats[cat] = stats[cat] ?? { budget: 0, expense: 0 };
+    stats[cat].budget += val;
+  }
+  let totalExpense = 0;
+  for (const e of filtered) {
+    const cat = e.category || ETC_KEY;
+    const val = expenseToKrw(e, table);
+    stats[cat] = stats[cat] ?? { budget: 0, expense: 0 };
+    stats[cat].expense += val;
+    totalExpense += val;
+  }
+
+  return {
+    total_budget_krw: budgets.reduce((s, b) => s + budgetToKrw(b, table), 0),
+    total_expense_krw: totalExpense,
+    category_stats: stats,
+  };
+};
 
 // SVG 도넛 (사용률 링)
 function Donut({
@@ -82,14 +130,21 @@ export default function BudgetManagePage() {
   const load = async () => {
     if (!tripId) return;
     try {
-      const [budgetRes, summaryRes] = await Promise.all([
+      const [budgetRes, expenseList, table] = await Promise.all([
         getBudgets(tripId),
-        getBudgetSummary(tripId),
+        getExpenses(tripId),
+        getKrwRateTable(),
       ]);
 
       const budgets = budgetRes?.budgets ?? [];
       setHasBudget(budgets.length > 0);
-      setSummary(summaryRes);
+      setSummary(
+        computeSummary(
+          budgets,
+          Array.isArray(expenseList) ? expenseList : [],
+          table
+        )
+      );
 
       // 모달 초기값을 기존 예산으로 채움 (총예산 행 포함)
       const prefill: Record<string, string> = {};

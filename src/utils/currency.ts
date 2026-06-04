@@ -27,22 +27,39 @@ export const fetchKrwRate = async (
   return typeof rate === "number" && rate > 0 ? rate : null;
 };
 
-// 지출의 원화 금액. 기본은 백엔드가 저장한 amount_krw를 쓰되,
-// 외화인데 amount_krw == amount_original이면 백엔드 환율 fallback(1.0)으로
-// 잘못 저장된 것이므로 (실제 1.0인 통화는 없음) 환율 테이블로 재환산
-export const expenseToKrw = (
-  e: any,
+// 원화 금액 계산 공통 로직. 기본은 백엔드가 저장한 환산값(krw)을 쓰되,
+// 외화인데 krw == 원금액이면 백엔드 환율 fallback(1.0)으로 잘못 저장된
+// 것이므로 (실제 1.0인 통화는 없음) 환율 테이블로 재환산
+export const toKrwAmount = (
+  orig: number,
+  krw: number,
+  currency: string,
   table: Record<string, number> | null
 ): number => {
-  const orig = Number(e?.amount_original ?? 0);
-  const krw = Number(e?.amount_krw ?? orig);
-  const cur = String(e?.currency || "KRW").toUpperCase();
-
+  const cur = String(currency || "KRW").toUpperCase();
   if (cur === "KRW") return krw || orig;
   if (krw !== orig) return krw; // 정상 환산된 값
 
   const rate = table?.[cur.toLowerCase()]; // KRW→통화 환율
   return rate && rate > 0 ? Math.round(orig / rate) : krw;
+};
+
+// 지출의 원화 금액 (fallback 오염 보정 포함)
+export const expenseToKrw = (
+  e: any,
+  table: Record<string, number> | null
+): number => {
+  const orig = Number(e?.amount_original ?? 0);
+  return toKrwAmount(orig, Number(e?.amount_krw ?? orig), e?.currency, table);
+};
+
+// 예산 항목의 원화 금액 (fallback 오염 보정 포함)
+export const budgetToKrw = (
+  b: any,
+  table: Record<string, number> | null
+): number => {
+  const orig = Number(b?.amount ?? 0);
+  return toKrwAmount(orig, Number(b?.amount_krw ?? orig), b?.currency, table);
 };
 
 // 통화 코드 → 좁은 기호: "JPY" → "¥", "USD" → "$", "KRW" → "₩"
