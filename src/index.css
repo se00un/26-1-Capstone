@@ -48,6 +48,25 @@
   #social .button-icon {
     filter: invert(1) brightness(2);
   }
+
+  /* 앱(폰 목업) 내부는 흰 배경이 하드코딩된 라이트 디자인이므로,
+     다크모드에서도 내부 글자색/변수는 라이트 값으로 고정해서 가독성 유지.
+     폰 바깥 배경만 다크로 남는다. */
+  .app-container {
+    color-scheme: light;
+    --text: #6b6375;
+    --text-h: #08060d;
+    --bg: #fff;
+    --border: #e5e4e7;
+    --code-bg: #f4f3ec;
+    --accent: #aa3bff;
+    --accent-bg: rgba(170, 59, 255, 0.1);
+    --accent-border: rgba(170, 59, 255, 0.5);
+    --social-bg: rgba(244, 243, 236, 0.5);
+    --shadow:
+      rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
+    color: var(--text);
+  }
 }
 
 #root {
