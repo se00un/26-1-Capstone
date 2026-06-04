@@ -73,6 +73,37 @@
   font-weight: 600;
 }
 
+/* 멤버 카드: 윗줄(프사/이름/역할) + 아랫줄(정산 금액) 2단 구성 */
+.friend-item.member {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+}
+
+.friend-row-top {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.friend-row-top .role-badge {
+  margin-left: auto;
+}
+
+.friend-row-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: #f8f8f8;
+}
+
+.friend-settle-label {
+  font-size: 13px;
+  color: #6b7280;
+}
+
 /* 최종 정산 금액 (한화) — 내야 하면 빨강, 받으면 파랑 */
 .friend-settle {
   font-size: 15px;

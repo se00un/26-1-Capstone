@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { getExpenses } from "../api/expenseAPI";
 import { getTripMembers } from "../api/tripAPI";
 import { formatMoney } from "../utils/money";
+import { expenseToKrw, getKrwRateTable } from "../utils/currency";
 import "./SettlementPage.css";
 
 type TripMember = {
@@ -24,6 +25,14 @@ export default function SettlementPage() {
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [view, setView] = useState<"select" | "result">("select");
   const [loading, setLoading] = useState(true);
+
+  // KRW 기준 환율 테이블 (잘못 저장된 amount_krw 보정용)
+  const [rateTable, setRateTable] = useState<Record<string, number> | null>(
+    null
+  );
+  useEffect(() => {
+    getKrwRateTable().then(setRateTable);
+  }, []);
 
   useEffect(() => {
     const load = async () => {
@@ -66,7 +75,7 @@ export default function SettlementPage() {
 
   const selectedExpenses = shared.filter((e) => selected.has(e.id));
   const total = selectedExpenses.reduce(
-    (sum, e) => sum + Number(e.amount_krw ?? e.amount_original ?? 0),
+    (sum, e) => sum + expenseToKrw(e, rateTable),
     0
   );
 
@@ -76,6 +85,26 @@ export default function SettlementPage() {
   const remainder = N > 0 ? total - baseSplit * N : 0;
   const splitAmount = (index: number) =>
     index === 0 ? baseSplit + remainder : baseSplit;
+
+  // 정산 확정: 멤버별 순정산(부담액-선지불)을 여행별로 저장하고 친구탭으로 이동.
+  // 백엔드에 정산 저장 API가 없어 localStorage 사용 (친구탭이 이 결과를 우선 표시)
+  const handleConfirmSettlement = () => {
+    const totals: Record<number, number> = {};
+    members.forEach((m, i) => {
+      const paid = selectedExpenses
+        .filter((e) => e.created_by === m.user_id)
+        .reduce(
+          (sum, e) => sum + expenseToKrw(e, rateTable),
+          0
+        );
+      totals[m.user_id] = splitAmount(i) - paid;
+    });
+    localStorage.setItem(
+      `settlement:${tripId}`,
+      JSON.stringify({ savedAt: new Date().toISOString(), total, totals })
+    );
+    navigate(`/trips/${tripId}/friends`);
+  };
 
   if (loading) {
     return (
@@ -102,7 +131,7 @@ export default function SettlementPage() {
             {selectedExpenses.map((e) => (
               <div className="settle-result-row" key={e.id}>
                 <span>{e.title}</span>
-                <span>{formatMoney(Number(e.amount_krw ?? e.amount_original ?? 0))}</span>
+                <span>{formatMoney(expenseToKrw(e, rateTable))}</span>
               </div>
             ))}
             <div className="settle-result-row total">
@@ -145,7 +174,7 @@ export default function SettlementPage() {
 
           <button
             className="settle-confirm-btn"
-            onClick={() => navigate(`/trips/${tripId}/budget`)}
+            onClick={handleConfirmSettlement}
           >
             확인
           </button>
@@ -185,7 +214,7 @@ export default function SettlementPage() {
                 <span className="settle-item-date">{e.expense_date}</span>
               </span>
               <span className="settle-item-amount">
-                {formatMoney(Number(e.amount_krw ?? e.amount_original ?? 0))}
+                {formatMoney(expenseToKrw(e, rateTable))}
               </span>
             </button>
           ))}
