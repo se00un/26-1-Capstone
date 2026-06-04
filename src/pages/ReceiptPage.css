@@ -137,12 +137,7 @@
 }
 
 /* 검수(프리필) 화면 */
-/* app-container(고정 높이 + overflow hidden) 안에서 내부 스크롤 허용 */
-.add-expense-page.receipt-review {
-  height: 100%;
-  min-height: 0;
-  overflow-y: auto;
-}
+/* (내부 스크롤은 AddExpensePage.css의 .add-expense-page 공통 규칙이 처리) */
 
 /* 타이틀 중앙 정렬 (뒤로가기 버튼은 왼쪽에 고정) */
 .receipt-review .add-expense-header {

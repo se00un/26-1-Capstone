@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import {
   uploadReceipt,
@@ -6,6 +6,8 @@ import {
   confirmReceipt,
 } from "../api/receiptAPI";
 import { CATEGORIES } from "../constants/categories";
+import CategorySelect from "../components/CategorySelect";
+import { getMyTrips } from "../api/tripAPI";
 import { digitsOnly, formatNumberInput } from "../utils/money";
 import "./AddExpensePage.css";
 import "./ReceiptPage.css";
@@ -70,6 +72,27 @@ export default function ReceiptPage() {
   const [expenseDate, setExpenseDate] = useState(dateParam);
   const [saving, setSaving] = useState(false);
 
+  // 여행 기간 (OCR 날짜가 기간 밖이면 선택했던 날짜로 되돌리기 위함)
+  const [tripRange, setTripRange] = useState<{
+    start: string;
+    end: string;
+  } | null>(null);
+
+  useEffect(() => {
+    if (!tripId) return;
+    getMyTrips()
+      .then((trips: any[]) => {
+        const found = trips.find((t: any) => String(t.id) === String(tripId));
+        if (found?.start_date && found?.end_date) {
+          setTripRange({
+            start: String(found.start_date).slice(0, 10),
+            end: String(found.end_date).slice(0, 10),
+          });
+        }
+      })
+      .catch(() => {});
+  }, [tripId]);
+
   const handlePick = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
     if (f) {
@@ -109,7 +132,16 @@ export default function ReceiptPage() {
       if (parsed.amount_original != null)
         setAmount(String(parsed.amount_original));
       if (parsed.currency) setCurrency(parsed.currency);
-      if (parsed.expense_date) setExpenseDate(parsed.expense_date);
+      // 날짜: OCR이 읽은 영수증 날짜가 여행 기간 안일 때만 사용.
+      // 기간 밖(옛날 영수증 등)이면 예산 화면에서 선택했던 날짜 유지
+      // (BudgetPage가 일자별로 그룹핑하므로 기간 밖 날짜는 화면에 안 보임)
+      if (parsed.expense_date) {
+        const d = String(parsed.expense_date).slice(0, 10);
+        const inRange =
+          !tripRange || (d >= tripRange.start && d <= tripRange.end);
+        if (inRange) setExpenseDate(d);
+        else if (!dateParam) setExpenseDate(tripRange!.start);
+      }
 
       // 내역(상호): 백엔드가 필드로 안 주므로 raw 텍스트 첫 유효 줄로 추정
       const guessedTitle =
@@ -143,6 +175,19 @@ export default function ReceiptPage() {
     }
     if (!amount || Number(amount) <= 0) {
       alert("금액을 확인해주세요.");
+      return;
+    }
+    if (!expenseDate) {
+      alert("날짜를 선택해주세요.");
+      return;
+    }
+    if (
+      tripRange &&
+      (expenseDate < tripRange.start || expenseDate > tripRange.end)
+    ) {
+      alert(
+        `날짜가 여행 기간(${tripRange.start} ~ ${tripRange.end}) 밖이에요.\n기간 안의 날짜로 선택해야 예산 화면에 표시됩니다.`
+      );
       return;
     }
     try {
@@ -210,6 +255,17 @@ export default function ReceiptPage() {
           </div>
 
           <div className="form-group">
+            <label>날짜</label>
+            <input
+              type="date"
+              value={expenseDate}
+              min={tripRange?.start}
+              max={tripRange?.end}
+              onChange={(e) => setExpenseDate(e.target.value)}
+            />
+          </div>
+
+          <div className="form-group">
             <label>범위</label>
             <div className="scope-toggle">
               <button
@@ -229,17 +285,7 @@ export default function ReceiptPage() {
 
           <div className="form-group">
             <label>카테고리</label>
-            <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-            >
-              <option value="">선택</option>
-              {CATEGORIES.map((c) => (
-                <option key={c.key} value={c.key}>
-                  {c.icon} {c.key}
-                </option>
-              ))}
-            </select>
+            <CategorySelect value={category} onChange={setCategory} />
           </div>
 
           <div className="form-group">
