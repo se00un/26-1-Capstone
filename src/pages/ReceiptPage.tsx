@@ -14,6 +14,37 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const POLL_INTERVAL = 2000;
 const POLL_MAX = 20; // 최대 약 40초 대기
 
+// raw OCR 텍스트에서 상호명 추정:
+// 빈 줄, "영수증" 같은 머릿말, 숫자/날짜/전화번호뿐인 줄은 건너뛰고
+// 처음으로 글자(한글/영문)가 있는 줄을 내역으로 사용
+const guessTitleFromOcr = (raw: string): string => {
+  const SKIP =
+    /영수증|매출전표|신용승인|receipt|invoice|^[\d\s\-./:*#()+,]+$/i;
+  for (const line of raw.split("\n")) {
+    const t = line.trim();
+    if (!t || SKIP.test(t)) continue;
+    if (!/[A-Za-z가-힣]/.test(t)) continue;
+    return t.slice(0, 30);
+  }
+  return "";
+};
+
+// OCR 텍스트 키워드로 카테고리 추정 (6종 고정: constants/categories)
+const CATEGORY_KEYWORDS: [string, RegExp][] = [
+  ["음식", /식당|카페|커피|치킨|피자|버거|분식|레스토랑|restaurant|cafe|coffee|food|bar|즈시|스시|라멘|우동|돈까스|김밥|베이커리|bakery/i],
+  ["교통", /택시|taxi|버스|bus|지하철|metro|기차|train|항공|airline|air|주유|렌터카|rental|톨게이트|교통/i],
+  ["숙소", /호텔|hotel|모텔|motel|리조트|resort|게스트하우스|hostel|에어비앤비|airbnb|펜션|숙박/i],
+  ["쇼핑", /마트|mart|편의점|cu\b|gs25|세븐일레븐|7-eleven|이마트|백화점|면세|duty\s*free|올리브영|다이소|쇼핑|store|shop/i],
+  ["관광", /입장권|티켓|ticket|박물관|museum|미술관|gallery|공원|park|투어|tour|전망대|관광/i],
+];
+
+const guessCategoryFromOcr = (raw: string): string => {
+  for (const [cat, re] of CATEGORY_KEYWORDS) {
+    if (re.test(raw)) return cat;
+  }
+  return "";
+};
+
 export default function ReceiptPage() {
   const navigate = useNavigate();
   const { tripId } = useParams();
@@ -60,6 +91,7 @@ export default function ReceiptPage() {
 
       // OCR 완료까지 폴링
       let parsed: any = null;
+      let rawText = "";
       for (let i = 0; i < POLL_MAX; i++) {
         await sleep(POLL_INTERVAL);
         const detail = await getReceiptDetail(rid);
@@ -67,17 +99,30 @@ export default function ReceiptPage() {
         if (pj?.error) throw new Error(pj.error);
         if (detail?.status === "completed" && pj) {
           parsed = pj;
+          rawText = detail.raw_ocr_text ?? "";
           break;
         }
       }
       if (!parsed) throw new Error("OCR 시간 초과");
 
-      // 프리필 (상호/title은 OCR이 안 줌 → 사용자 입력)
+      // 프리필: parsed_json 우선, 없는 항목은 raw OCR 텍스트에서 추정
       if (parsed.amount_original != null)
         setAmount(String(parsed.amount_original));
       if (parsed.currency) setCurrency(parsed.currency);
       if (parsed.expense_date) setExpenseDate(parsed.expense_date);
-      if (parsed.category) setCategory(parsed.category);
+
+      // 내역(상호): 백엔드가 필드로 안 주므로 raw 텍스트 첫 유효 줄로 추정
+      const guessedTitle =
+        parsed.store_name || parsed.title || guessTitleFromOcr(rawText);
+      if (guessedTitle) setTitle(guessedTitle);
+
+      // 카테고리: parsed가 유효한(6종) 값을 주면 그대로, 아니면 키워드로 추정
+      const parsedCategory = CATEGORIES.some((c) => c.key === parsed.category)
+        ? parsed.category
+        : "";
+      const guessedCategory = parsedCategory || guessCategoryFromOcr(rawText);
+      if (guessedCategory) setCategory(guessedCategory);
+
       setPhase("review");
     } catch (error) {
       console.error("영수증 인식 실패:", error);
