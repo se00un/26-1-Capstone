@@ -167,14 +167,11 @@
 
 .receipt-amount-row {
   display: flex;
+  align-items: stretch;
   gap: 10px;
 }
 
-.receipt-amount-row input[type="number"] {
+.receipt-amount-row > input {
   flex: 1;
-}
-
-.receipt-currency {
-  width: 80px;
-  text-align: center;
+  min-width: 0;
 }

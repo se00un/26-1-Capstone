@@ -71,6 +71,18 @@
   font-weight: 700;
 }
 
+/* 금액 입력 + 통화 드롭다운 한 줄 배치 */
+.amount-currency-row {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+}
+
+.amount-currency-row > input {
+  flex: 1;
+  min-width: 0;
+}
+
 .add-expense-page input,
 .add-expense-page select,
 .add-expense-page textarea {

@@ -7,6 +7,7 @@ import {
 } from "../api/receiptAPI";
 import { CATEGORIES } from "../constants/categories";
 import CategorySelect from "../components/CategorySelect";
+import CurrencySelect from "../components/CurrencySelect";
 import { getMyTrips } from "../api/tripAPI";
 import { digitsOnly, formatNumberInput } from "../utils/money";
 import "./AddExpensePage.css";
@@ -131,7 +132,7 @@ export default function ReceiptPage() {
       // 프리필: parsed_json 우선, 없는 항목은 raw OCR 텍스트에서 추정
       if (parsed.amount_original != null)
         setAmount(String(parsed.amount_original));
-      if (parsed.currency) setCurrency(parsed.currency);
+      if (parsed.currency) setCurrency(String(parsed.currency).toUpperCase());
       // 날짜: OCR이 읽은 영수증 날짜가 여행 기간 안일 때만 사용.
       // 기간 밖(옛날 영수증 등)이면 예산 화면에서 선택했던 날짜 유지
       // (BudgetPage가 일자별로 그룹핑하므로 기간 밖 날짜는 화면에 안 보임)
@@ -235,12 +236,8 @@ export default function ReceiptPage() {
                 value={formatNumberInput(amount)}
                 onChange={(e) => setAmount(digitsOnly(e.target.value))}
               />
-              <input
-                className="receipt-currency"
-                type="text"
-                value={currency}
-                onChange={(e) => setCurrency(e.target.value)}
-              />
+              {/* OCR이 인식한 통화가 기본값 — 틀렸으면 드롭다운에서 수정 */}
+              <CurrencySelect value={currency} onChange={setCurrency} />
             </div>
           </div>
 

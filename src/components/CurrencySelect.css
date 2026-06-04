@@ -1,5 +1,6 @@
 .currency-select {
   position: relative;
+  display: flex; /* 폼 행(align-items: stretch) 안에서 입력칸 높이에 맞춤 */
 }
 
 .currency-select-trigger {
