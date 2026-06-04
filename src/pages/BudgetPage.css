@@ -194,6 +194,20 @@
   gap: 8px;
 }
 
+/* 표시 통화 선택 줄 */
+.budget-currency-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.budget-currency-label {
+  font-size: 13px;
+  color: #6b7280;
+}
+
 .settle-btn,
 .manage-btn {
   border: none;

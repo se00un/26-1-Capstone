@@ -3,12 +3,13 @@ import { useNavigate, useParams } from "react-router-dom";
 import { getMyTrips } from "../api/tripAPI";
 import { getExpenses } from "../api/expenseAPI";
 import { CATEGORY_ICON } from "../constants/categories";
-import { formatMoney } from "../utils/money";
 import {
-  getCurrencyForCountry,
   fetchKrwRate,
-  formatCurrency,
+  formatAmountWithSymbol,
+  getKrwRateTable,
+  expenseToKrw,
 } from "../utils/currency";
+import CurrencySelect from "../components/CurrencySelect";
 import "./BudgetPage.css";
 
 type TripDay = {
@@ -51,9 +52,19 @@ export default function BudgetPage() {
   const [expenses, setExpenses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // 여행 국가의 현지 통화 + KRW→현지 환율 (조회 실패 시 KRW 표시 유지)
-  const [localCurrency, setLocalCurrency] = useState("KRW");
+  // 표시 통화: 상단 드롭다운에서 수동 선택, 여행별로 localStorage에 저장
+  const [localCurrency, setLocalCurrency] = useState(
+    () => localStorage.getItem(`tripCurrency:${tripId}`) ?? "KRW"
+  );
   const [krwRate, setKrwRate] = useState<number | null>(null);
+
+  // KRW 기준 전체 환율 테이블 (잘못 저장된 amount_krw 보정용)
+  const [rateTable, setRateTable] = useState<Record<string, number> | null>(
+    null
+  );
+  useEffect(() => {
+    getKrwRateTable().then(setRateTable);
+  }, []);
 
   const load = async () => {
     if (!tripId) return;
@@ -63,16 +74,6 @@ export default function BudgetPage() {
       setTrip(found ?? null);
       if (found) {
         setDays(createTripDays(found.start_date, found.end_date));
-
-        // 국가명 → 통화 → 환율 (실패해도 화면은 KRW로 정상 동작)
-        const currency = await getCurrencyForCountry(found.country);
-        if (currency !== "KRW") {
-          const rate = await fetchKrwRate(currency);
-          if (rate) {
-            setLocalCurrency(currency);
-            setKrwRate(rate);
-          }
-        }
       }
 
       const expenseList = await getExpenses(tripId);
@@ -88,18 +89,47 @@ export default function BudgetPage() {
     load();
   }, [tripId]);
 
+  // 선택된 통화의 KRW→통화 환율 조회 (실패 시 KRW 표시로 폴백)
+  useEffect(() => {
+    let cancelled = false;
+    setKrwRate(null);
+    fetchKrwRate(localCurrency).then((rate) => {
+      if (!cancelled) {
+        if (rate) {
+          setKrwRate(rate);
+        } else if (localCurrency !== "KRW") {
+          alert("환율 조회에 실패해서 원화로 표시합니다.");
+          setLocalCurrency("KRW");
+        }
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [localCurrency]);
+
+  const handleCurrencyChange = (code: string) => {
+    setLocalCurrency(code);
+    localStorage.setItem(`tripCurrency:${tripId}`, code);
+  };
+
   const expensesByDay = (iso: string) =>
     expenses.filter((e) => String(e.expense_date).slice(0, 10) === iso);
 
-  // 지출 금액을 현지 통화로 표시.
-  // 원래 현지 통화로 쓴 지출이면 원금액 그대로(정확), KRW 등 다른 통화면 환율로 환산
+  // 지출 금액을 선택 통화로 표시 (금액 뒤에 통화 기호: "1,234¥").
+  // 지출이 원래 그 통화면 원금액 그대로(정확), 아니면 보정된 원화 기준으로 환산
   const displayAmount = (e: any): string => {
-    const krw = Number(e.amount_krw ?? e.amount_original ?? 0);
-    if (localCurrency === "KRW" || !krwRate) return formatMoney(krw);
-    if (e.currency === localCurrency) {
-      return formatCurrency(Number(e.amount_original ?? 0), localCurrency);
+    const krw = expenseToKrw(e, rateTable);
+    if (localCurrency === "KRW" || !krwRate) {
+      return formatAmountWithSymbol(krw, "KRW");
     }
-    return formatCurrency(krw * krwRate, localCurrency);
+    if (e.currency === localCurrency) {
+      return formatAmountWithSymbol(
+        Number(e.amount_original ?? 0),
+        localCurrency
+      );
+    }
+    return formatAmountWithSymbol(krw * krwRate, localCurrency);
   };
 
   if (loading) {
@@ -152,6 +182,15 @@ export default function BudgetPage() {
             </button>
           </div>
         </header>
+
+        {/* 표시 통화 선택 (검색 가능 드롭다운) */}
+        <div className="budget-currency-row">
+          <span className="budget-currency-label">표시 통화</span>
+          <CurrencySelect
+            value={localCurrency}
+            onChange={handleCurrencyChange}
+          />
+        </div>
 
         <section className="budget-days">
           {days.map((day) => {
