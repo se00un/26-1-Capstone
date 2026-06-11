@@ -34,7 +34,7 @@ const createTripDays = (startDate: string, endDate: string): TripDay[] => {
       label: `${index}일차`,
       date: `${current.getMonth() + 1}월 ${current.getDate()}일`,
       iso: `${current.getFullYear()}-${pad(current.getMonth() + 1)}-${pad(
-        current.getDate()
+        current.getDate(),
       )}`,
     });
     current.setDate(current.getDate() + 1);
@@ -54,13 +54,13 @@ export default function BudgetPage() {
 
   // 표시 통화: 상단 드롭다운에서 수동 선택, 여행별로 localStorage에 저장
   const [localCurrency, setLocalCurrency] = useState(
-    () => localStorage.getItem(`tripCurrency:${tripId}`) ?? "KRW"
+    () => localStorage.getItem(`tripCurrency:${tripId}`) ?? "KRW",
   );
   const [krwRate, setKrwRate] = useState<number | null>(null);
 
   // KRW 기준 전체 환율 테이블 (잘못 저장된 amount_krw 보정용)
   const [rateTable, setRateTable] = useState<Record<string, number> | null>(
-    null
+    null,
   );
   useEffect(() => {
     getKrwRateTable().then(setRateTable);
@@ -126,7 +126,7 @@ export default function BudgetPage() {
     if (e.currency === localCurrency) {
       return formatAmountWithSymbol(
         Number(e.amount_original ?? 0),
-        localCurrency
+        localCurrency,
       );
     }
     return formatAmountWithSymbol(krw * krwRate, localCurrency);
@@ -205,12 +205,12 @@ export default function BudgetPage() {
                   </div>
 
                   <div className="budget-day-tools">
-                    <span className="reorder-icon">⇅</span>
+                    {/*<span className="reorder-icon">⇅</span>*/}
                     <button
                       className="budget-add-btn"
                       onClick={() =>
                         navigate(
-                          `/trips/${tripId}/budget/expense/new?day=${day.dayNumber}&date=${day.iso}`
+                          `/trips/${tripId}/budget/expense/new?day=${day.dayNumber}&date=${day.iso}`,
                         )
                       }
                     >
@@ -227,9 +227,7 @@ export default function BudgetPage() {
                         className="budget-expense-item"
                         key={e.id}
                         onClick={() =>
-                          navigate(
-                            `/trips/${tripId}/budget/expense/${e.id}`
-                          )
+                          navigate(`/trips/${tripId}/budget/expense/${e.id}`)
                         }
                       >
                         <span
