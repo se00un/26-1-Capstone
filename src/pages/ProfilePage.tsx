@@ -15,7 +15,7 @@ type Profile = {
 export default function ProfilePage() {
   const navigate = useNavigate();
 
-  // 우선 localStorage 정보로 즉시 표시하고, 이후 /me 응답으로 갱신
+  // 우선 localStorage 정보로 표시
   const [profile, setProfile] = useState<Profile | null>(() => {
     const stored = localStorage.getItem("user");
     return stored ? JSON.parse(stored) : null;
@@ -28,7 +28,7 @@ export default function ProfilePage() {
         setProfile(me);
       } catch (error) {
         console.error("내 정보 조회 실패:", error);
-        // 실패 시 localStorage 정보를 그대로 사용
+        // 실패 시 localStorage 정보 그대로 사용
       }
     };
 

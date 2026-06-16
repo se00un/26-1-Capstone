@@ -14,7 +14,6 @@ type TripMember = {
   role: string;
 };
 
-// 정산 화면
 // 공동 지출 선택 → 합계 → 멤버 목록 API 기반 1/N 분할 표시
 export default function SettlementPage() {
   const navigate = useNavigate();
@@ -79,15 +78,14 @@ export default function SettlementPage() {
     0
   );
 
-  // 1/N 분할 — 백엔드 split 로직과 동일하게 반올림하고 남는 차액은 첫 멤버에게
+  // 1/N 분할 — 차액은 첫 멤버에게
   const N = members.length;
   const baseSplit = N > 0 ? Math.round(total / N) : 0;
   const remainder = N > 0 ? total - baseSplit * N : 0;
   const splitAmount = (index: number) =>
     index === 0 ? baseSplit + remainder : baseSplit;
 
-  // 정산 확정: 멤버별 순정산(부담액-선지불)을 여행별로 저장하고 친구탭으로 이동.
-  // 백엔드에 정산 저장 API가 없어 localStorage 사용 (친구탭이 이 결과를 우선 표시)
+  // 멤버별 순정산(부담액-선지불) 여행별로 저장하고 친구탭으로 이동(localStorage 사용)
   const handleConfirmSettlement = () => {
     const totals: Record<number, number> = {};
     members.forEach((m, i) => {
