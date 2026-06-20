@@ -37,9 +37,8 @@ const getMyId = (): number | null => {
   }
 };
 
-// 예산/지출 통계를 프론트에서 직접 계산 (전부 보정된 KRW 기준).
-// 백엔드 /summary는 환율 fallback(1.0)으로 오염된 amount_krw를 그대로 합산해서
-// 통화가 섞이면 예산↔지출 스케일이 안 맞는 문제가 있음 → 클라이언트 보정 계산으로 대체
+// 예산/지출 통계 프론트에서 직접 계산 (보정된 KRW 기준)
+// 백엔드 통화가 섞이면 예산/지출 스케일 안 맞는 문제 클라이언트 보정 계산으로 대체
 const computeSummary = (
   budgets: any[],
   expenses: any[],

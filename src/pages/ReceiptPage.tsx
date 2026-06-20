@@ -206,7 +206,7 @@ export default function ReceiptPage() {
     }
   };
 
-  // --- 검수 화면 ---
+  // 검수 화면
   if (phase === "review") {
     return (
       <div className="app-container">
@@ -297,7 +297,7 @@ export default function ReceiptPage() {
     );
   }
 
-  // --- 업로드 / 인식 중 화면 ---
+  // 업로드 / 인식 중 화면
   return (
     <div className="app-container">
       <div className="receipt-page">

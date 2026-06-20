@@ -116,7 +116,7 @@ export default function BudgetPage() {
   const expensesByDay = (iso: string) =>
     expenses.filter((e) => String(e.expense_date).slice(0, 10) === iso);
 
-  // 지출 금액을 선택 통화로 표시 (금액 뒤에 통화 기호: "1,234¥").
+  // 지출 금액을 선택 통화로 표시
   // 지출이 원래 그 통화면 원금액 그대로(정확), 아니면 보정된 원화 기준으로 환산
   const displayAmount = (e: any): string => {
     const krw = expenseToKrw(e, rateTable);
