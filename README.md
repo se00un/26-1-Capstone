@@ -1,9 +1,4 @@
 <<<<<<< HEAD
-## Setup
-
-```bash
-npm install
-npm run dev
 
 # React + TypeScript + Vite
 
