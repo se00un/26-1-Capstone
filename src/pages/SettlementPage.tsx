@@ -28,7 +28,7 @@ export default function SettlementPage() {
 
   // KRW 기준 환율 테이블 (잘못 저장된 amount_krw 보정용)
   const [rateTable, setRateTable] = useState<Record<string, number> | null>(
-    null
+    null,
   );
   useEffect(() => {
     getKrwRateTable().then(setRateTable);
@@ -44,8 +44,8 @@ export default function SettlementPage() {
         ]);
         setShared(
           (Array.isArray(list) ? list : []).filter(
-            (e) => e.expense_type === "shared"
-          )
+            (e) => e.expense_type === "shared",
+          ),
         );
         setMembers(Array.isArray(memberList) ? memberList : []);
       } catch (error) {
@@ -69,14 +69,14 @@ export default function SettlementPage() {
     setSelected((prev) =>
       prev.size === shared.length
         ? new Set()
-        : new Set(shared.map((e) => e.id))
+        : new Set(shared.map((e) => e.id)),
     );
   };
 
   const selectedExpenses = shared.filter((e) => selected.has(e.id));
   const total = selectedExpenses.reduce(
     (sum, e) => sum + expenseToKrw(e, rateTable),
-    0
+    0,
   );
 
   // 1/N 분할 — 백엔드 split 로직과 동일하게 반올림하고 남는 차액은 첫 멤버에게
@@ -93,15 +93,12 @@ export default function SettlementPage() {
     members.forEach((m, i) => {
       const paid = selectedExpenses
         .filter((e) => e.created_by === m.user_id)
-        .reduce(
-          (sum, e) => sum + expenseToKrw(e, rateTable),
-          0
-        );
+        .reduce((sum, e) => sum + expenseToKrw(e, rateTable), 0);
       totals[m.user_id] = splitAmount(i) - paid;
     });
     localStorage.setItem(
       `settlement:${tripId}`,
-      JSON.stringify({ savedAt: new Date().toISOString(), total, totals })
+      JSON.stringify({ savedAt: new Date().toISOString(), total, totals }),
     );
     navigate(`/trips/${tripId}/friends`);
   };
@@ -194,7 +191,9 @@ export default function SettlementPage() {
         </header>
 
         <button className="settle-check-row select-all" onClick={toggleAll}>
-          <span className={`settle-check ${selected.size === shared.length && shared.length > 0 ? "on" : ""}`} />
+          <span
+            className={`settle-check ${selected.size === shared.length && shared.length > 0 ? "on" : ""}`}
+          />
           <span>전체선택</span>
         </button>
 
@@ -208,7 +207,9 @@ export default function SettlementPage() {
               key={e.id}
               onClick={() => toggle(e.id)}
             >
-              <span className={`settle-check ${selected.has(e.id) ? "on" : ""}`} />
+              <span
+                className={`settle-check ${selected.has(e.id) ? "on" : ""}`}
+              />
               <span className="settle-item-info">
                 <span className="settle-item-title">{e.title}</span>
                 <span className="settle-item-date">{e.expense_date}</span>

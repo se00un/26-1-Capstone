@@ -15,11 +15,9 @@ import "./ReceiptPage.css";
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const POLL_INTERVAL = 2000;
-const POLL_MAX = 20; // 최대 약 40초 대기
+const POLL_MAX = 20;
 
-// raw OCR 텍스트에서 상호명 추정:
-// 빈 줄, "영수증" 같은 머릿말, 숫자/날짜/전화번호뿐인 줄은 건너뛰고
-// 처음으로 글자(한글/영문)가 있는 줄을 내역으로 사용
+// raw OCR 텍스트에서 상호명 추정(불필요 줄 제외)
 const guessTitleFromOcr = (raw: string): string => {
   const SKIP =
     /영수증|매출전표|신용승인|receipt|invoice|^[\d\s\-./:*#()+,]+$/i;
@@ -32,7 +30,7 @@ const guessTitleFromOcr = (raw: string): string => {
   return "";
 };
 
-// OCR 텍스트 키워드로 카테고리 추정 (6종 고정: constants/categories)
+// OCR 텍스트 키워드로 카테고리 추정
 const CATEGORY_KEYWORDS: [string, RegExp][] = [
   ["음식", /식당|카페|커피|치킨|피자|버거|분식|레스토랑|restaurant|cafe|coffee|food|bar|즈시|스시|라멘|우동|돈까스|김밥|베이커리|bakery/i],
   ["교통", /택시|taxi|버스|bus|지하철|metro|기차|train|항공|airline|air|주유|렌터카|rental|톨게이트|교통/i],
@@ -134,8 +132,7 @@ export default function ReceiptPage() {
         setAmount(String(parsed.amount_original));
       if (parsed.currency) setCurrency(String(parsed.currency).toUpperCase());
       // 날짜: OCR이 읽은 영수증 날짜가 여행 기간 안일 때만 사용.
-      // 기간 밖(옛날 영수증 등)이면 예산 화면에서 선택했던 날짜 유지
-      // (BudgetPage가 일자별로 그룹핑하므로 기간 밖 날짜는 화면에 안 보임)
+      // 기간 밖이면 예산 화면에서 선택했던 날짜 유지
       if (parsed.expense_date) {
         const d = String(parsed.expense_date).slice(0, 10);
         const inRange =
