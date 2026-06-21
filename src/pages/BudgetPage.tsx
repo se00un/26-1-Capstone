@@ -183,13 +183,9 @@ export default function BudgetPage() {
           </div>
         </header>
 
-        {/* 표시 통화 선택 (검색 가능 드롭다운) */}
         <div className="budget-currency-row">
           <span className="budget-currency-label">표시 통화</span>
-          <CurrencySelect
-            value={localCurrency}
-            onChange={handleCurrencyChange}
-          />
+          <CurrencySelect value={localCurrency} onChange={handleCurrencyChange} />
         </div>
 
         <section className="budget-days">
@@ -227,9 +223,7 @@ export default function BudgetPage() {
                         className="budget-expense-item"
                         key={e.id}
                         onClick={() =>
-                          navigate(
-                            `/trips/${tripId}/budget/expense/${e.id}`
-                          )
+                          navigate(`/trips/${tripId}/budget/expense/${e.id}`)
                         }
                       >
                         <span
@@ -239,9 +233,11 @@ export default function BudgetPage() {
                         >
                           {idx + 1}
                         </span>
+
                         <span className="expense-title">
                           {e.title} {CATEGORY_ICON[e.category] ?? ""}
                         </span>
+
                         <span className="expense-right">
                           <span className="expense-amount">
                             -{displayAmount(e)}
@@ -258,16 +254,138 @@ export default function BudgetPage() {
             );
           })}
         </section>
-
-        <nav className="bottom-tab">
-          <button onClick={() => navigate(`/trips/${tripId}`)}>일정</button>
-          <button className="active-tab">예산</button>
-          <button onClick={() => navigate(`/trips/${tripId}/friends`)}>
-            친구
-          </button>
-          <button>리포트</button>
-        </nav>
       </div>
+
+      <nav className="bottom-tab">
+        <button onClick={() => navigate(`/trips/${tripId}`)}>일정</button>
+        <button className="active-tab">예산</button>
+        <button onClick={() => navigate(`/trips/${tripId}/friends`)}>
+          친구
+        </button>
+        <button onClick={() => navigate(`/trips/${tripId}/report`)}>
+          리포트
+        </button>
+      </nav>
     </div>
   );
 }
+
+
+
+//   return (
+//     <div className="app-container">
+//       <div className="budget-page">
+//         <header className="budget-top">
+//           <button
+//             className="back-btn"
+//             onClick={() => navigate(`/trips/${tripId}`)}
+//           >
+//             ✕
+//           </button>
+//           <h1 className="budget-trip-title">{trip.title}</h1>
+
+//           <div className="budget-top-actions">
+//             <button
+//               className="settle-btn"
+//               onClick={() => navigate(`/trips/${tripId}/settle`)}
+//             >
+//               정산하기
+//             </button>
+//             <button
+//               className="manage-btn"
+//               onClick={() => navigate(`/trips/${tripId}/budget/manage`)}
+//             >
+//               예산 관리
+//             </button>
+//           </div>
+//         </header>
+
+//         {/* 표시 통화 선택 (검색 가능 드롭다운) */}
+//         <div className="budget-currency-row">
+//           <span className="budget-currency-label">표시 통화</span>
+//           <CurrencySelect
+//             value={localCurrency}
+//             onChange={handleCurrencyChange}
+//           />
+//         </div>
+
+//         <section className="budget-days">
+//           {days.map((day) => {
+//             const dayExpenses = expensesByDay(day.iso);
+
+//             return (
+//               <div className="budget-day-card" key={day.dayNumber}>
+//                 <div className="budget-day-header">
+//                   <div>
+//                     <strong>{day.label}</strong>
+//                     <span>{day.date}</span>
+//                   </div>
+
+//                   <div className="budget-day-tools">
+//                     <span className="reorder-icon">⇅</span>
+//                     <button
+//                       className="budget-add-btn"
+//                       onClick={() =>
+//                         navigate(
+//                           `/trips/${tripId}/budget/expense/new?day=${day.dayNumber}&date=${day.iso}`
+//                         )
+//                       }
+//                     >
+//                       추가
+//                     </button>
+//                   </div>
+//                 </div>
+
+//                 {dayExpenses.length > 0 && (
+//                   <div className="budget-expense-list">
+//                     {dayExpenses.map((e, idx) => (
+//                       <button
+//                         type="button"
+//                         className="budget-expense-item"
+//                         key={e.id}
+//                         onClick={() =>
+//                           navigate(
+//                             `/trips/${tripId}/budget/expense/${e.id}`
+//                           )
+//                         }
+//                       >
+//                         <span
+//                           className={`expense-badge ${
+//                             e.expense_type === "shared" ? "shared" : "personal"
+//                           }`}
+//                         >
+//                           {idx + 1}
+//                         </span>
+//                         <span className="expense-title">
+//                           {e.title} {CATEGORY_ICON[e.category] ?? ""}
+//                         </span>
+//                         <span className="expense-right">
+//                           <span className="expense-amount">
+//                             -{displayAmount(e)}
+//                           </span>
+//                           {e.memo && (
+//                             <span className="expense-memo">{e.memo}</span>
+//                           )}
+//                         </span>
+//                       </button>
+//                     ))}
+//                   </div>
+//                 )}
+//               </div>
+//             );
+//           })}
+//         </section>
+
+//         <nav className="bottom-tab">
+//           <button onClick={() => navigate(`/trips/${tripId}`)}>일정</button>
+//           <button className="active-tab">예산</button>
+//           <button onClick={() => navigate(`/trips/${tripId}/friends`)}>
+//             친구
+//           </button>
+//           <button onClick={() => navigate(`/trips/${tripId}/report`)}>리포트
+//           </button>
+//         </nav>
+//       </div>
+//     </div>
+//   );
+// }

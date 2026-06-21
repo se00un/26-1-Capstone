@@ -1,5 +1,6 @@
 import { GoogleLogin } from "@react-oauth/google";
 import { googleLogin } from "../api/authAPI";
+import "./LoginPage.css";
 
 export default function LoginPage() {
   const handleSuccess = async (credentialResponse: any) => {
@@ -30,13 +31,25 @@ export default function LoginPage() {
 
   return (
     <div className="app-container">
-      <div style={{ padding: "60px 30px", textAlign: "center" }}>
-        <h1 style={{ color: "#2563eb", marginBottom: "40px" }}>TripLog</h1>
+      <div className="login-page">
+        <div className="login-card">
+          <h1 className="login-logo">TripLog</h1>
 
-        <GoogleLogin
-          onSuccess={handleSuccess}
-          onError={() => console.log("Login Failed")}
-        />
+          <p className="login-subtitle">
+            여행 기록과 예산을 한 번에 관리하세요
+          </p>
+
+          <div className="google-login-wrapper">
+            <GoogleLogin
+              onSuccess={handleSuccess}
+              onError={() => console.log("Login Failed")}
+              width="300"
+              size="large"
+              shape="pill"
+              text="signin_with"
+            />
+          </div>
+        </div>
       </div>
     </div>
   );

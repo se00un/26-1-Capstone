@@ -200,7 +200,8 @@ export default function FriendsPage() {
             예산
           </button>
           <button className="active-tab">친구</button>
-          <button>리포트</button>
+          <button onClick={() => navigate(`/trips/${tripId}/report`)}>리포트
+          </button>
         </nav>
       </div>
     </div>

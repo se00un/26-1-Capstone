@@ -62,7 +62,8 @@ export default function ProfilePage() {
 
         <section className="profile-card">
           <div className="profile-avatar">
-            {imageUrl ? <img src={imageUrl} alt="프로필" /> : <span>👤</span>}
+            {/* {imageUrl ? <img src={imageUrl} alt="프로필" /> : <span>👤</span>} */}
+            <span>👤</span>
           </div>
 
           <div className="profile-name">{displayName}</div>

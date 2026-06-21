@@ -1,10 +1,10 @@
 .budget-page {
   width: 100%;
-  min-height: 100%;
-  padding: 28px 24px 100px;
+  height: calc(100% - 70px);
+  padding: 28px 24px 24px;
   box-sizing: border-box;
   background: #f8f8f8;
-  position: relative;
+  overflow-y: auto;
 }
 
 .budget-header {
@@ -302,3 +302,37 @@
   font-size: 11px;
   color: #9ca3af;
 }
+
+
+.bottom-tab {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 70px;
+
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+
+  background: white;
+  border-top: 1px solid #e5e7eb;
+  z-index: 10;
+}
+
+.bottom-tab button {
+  border: none;
+  background: transparent;
+
+  font-size: 16px;
+  font-weight: 500;
+  color: #111827;
+
+  padding: 14px 8px 18px;
+  cursor: pointer;
+}
+
+.bottom-tab .active-tab {
+  color: #2563eb;
+  font-weight: 800;
+}
+

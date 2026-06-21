@@ -12,6 +12,7 @@ import ReceiptPage from "./pages/ReceiptPage";
 import SettlementPage from "./pages/SettlementPage";
 import LoginPage from "./pages/LoginPage";
 import ProfilePage from "./pages/ProfilePage";
+import ReportPage from "./pages/ReportPage";
 
 function App() {
   const user = localStorage.getItem("user");
@@ -93,6 +94,9 @@ function App() {
           path="/profile"
           element={user ? <ProfilePage /> : <Navigate to="/login" />}
         />
+
+        {/* 리포트 */}
+        <Route path="/trips/:tripId/report" element={<ReportPage />} />
 
       </Routes>
     </BrowserRouter>
