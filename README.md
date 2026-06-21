@@ -1,5 +1,5 @@
 <<<<<<< HEAD
-# Setup
+## Setup
 
 ```bash
 npm install
